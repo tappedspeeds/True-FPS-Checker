@@ -1,49 +1,471 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2487.7">
-  <style type="text/css">
-    span.s1 {font-kerning: none}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>True Video FPS Detector</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .instructions {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 50px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        #drop-zone.highlight {
+            background-color: #f0f8ff;
+            border-color: #4a90e2;
+        }
+
+        #drop-zone p {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background-color: #4a90e2;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+
+        .file-label:hover {
+            background-color: #357abd;
+        }
+
+        #result, #progress, #error {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        #result h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        #fps-value {
+            font-weight: bold;
+            font-size: 2em;
+            color: #4a90e2;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        #analysis-details {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .note {
+            font-style: italic;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+    </style>
 </head>
 <body>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;!DOCTYPE html&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;html lang="en"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;head&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;title&gt;Video FPS Detector&lt;/title&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="styles.css"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;/head&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;body&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;h1&gt;Video FPS Detector&lt;/h1&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;div id="drop-area"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;p&gt;Drag &amp; drop your video file here&lt;/p&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;p class="small-text"&gt;Or click to select file&lt;/p&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;input type="file" id="file-input" accept="video/*" hidden&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;/div&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;div id="loading-area" class="hidden"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;div class="spinner"&gt;&lt;/div&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;p&gt;Processing video, please wait...&lt;/p&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;/div&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;div id="result-area" class="hidden"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;h2&gt;Results&lt;/h2&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;p&gt;Frame Rate: &lt;span id="fps-value"&gt;N/A&lt;/span&gt; FPS&lt;/p&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;button id="reset-button"&gt;Analyze Another Video&lt;/button&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;/div&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;div id="error-area" class="hidden"&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;h2&gt;Error&lt;/h2&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;p id="error-message"&gt;&lt;/p&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">            </span>&lt;button id="error-reset-button"&gt;Try Again&lt;/button&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">        </span>&lt;/div&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;/div&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b><span class="Apple-converted-space">    </span>&lt;script src="script.js"&gt;&lt;/script&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;/body&gt;</b></span></h1>
-<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px Times; -webkit-text-stroke: #000000"><span class="s1"><b>&lt;/html&gt;</b></span></h1>
+    <div class="container">
+        <h1>Video Frame Rate Detector</h1>
+        <div class="instructions">
+            <p>Drag and drop a video file below to detect its true frame rate (FPS).</p>
+            <p>Analysis is performed entirely in your browser - no data is uploaded.</p>
+        </div>
+        <div id="drop-zone">
+            <p>Drop your video file here</p>
+            <p>or</p>
+            <input type="file" id="file-input" accept="video/*">
+            <label for="file-input" class="file-label">Select a video file</label>
+        </div>
+        <div id="result" class="hidden">
+            <h2>Results:</h2>
+            <p>Detected frame rate: <span id="fps-value">--</span> FPS</p>
+            <div id="analysis-details"></div>
+        </div>
+        <div id="progress" class="hidden">
+            <p>Analyzing video... <span id="progress-percent">0</span>%</p>
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+        </div>
+        <div id="error" class="hidden">
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const resultDiv = document.getElementById('result');
+            const fpsValue = document.getElementById('fps-value');
+            const analysisDetails = document.getElementById('analysis-details');
+            const progressDiv = document.getElementById('progress');
+            const progressPercent = document.getElementById('progress-percent');
+            const progressFill = document.getElementById('progress-fill');
+            const errorDiv = document.getElementById('error');
+            const errorMessage = document.getElementById('error-message');
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Highlight drop zone when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('highlight'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('highlight'), false);
+            });
+
+            // Handle dropped files
+            dropZone.addEventListener('drop', handleDrop, false);
+            fileInput.addEventListener('change', handleFileSelect, false);
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            function handleDrop(e) {
+                const files = e.dataTransfer.files;
+                if (files.length) processVideoFile(files[0]);
+            }
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length) processVideoFile(files[0]);
+            }
+
+            function processVideoFile(file) {
+                // Reset UI
+                resultDiv.classList.add('hidden');
+                errorDiv.classList.add('hidden');
+                
+                // Validate file type
+                if (!file.type.startsWith('video/')) {
+                    showError('Please select a valid video file.');
+                    return;
+                }
+
+                // Create video element for analysis
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                const videoUrl = URL.createObjectURL(file);
+                video.src = videoUrl;
+
+                // Show progress indicator
+                progressDiv.classList.remove('hidden');
+                progressPercent.textContent = '0';
+                progressFill.style.width = '0%';
+
+                // Once metadata is loaded, start analysis
+                video.onloadedmetadata = function() {
+                    detectFrameRate(video, file.name);
+                };
+
+                video.onerror = function() {
+                    URL.revokeObjectURL(videoUrl);
+                    showError('Error loading video. The format may not be supported by your browser.');
+                };
+            }
+
+            function detectFrameRate(video, fileName) {
+                // Create canvas for frame analysis
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Use lower resolution for better performance
+                canvas.width = 200;
+                canvas.height = 150;
+                
+                // Analysis parameters
+                const duration = video.duration;
+                const maxSamples = Math.min(300, Math.ceil(duration * 10)); // 10 samples/sec, max 300
+                const timeStep = duration / maxSamples;
+                
+                // Arrays to store analysis data
+                const frameDifferences = [];
+                let lastImageData = null;
+                let sampleIndex = 0;
+                
+                // Function to analyze each frame
+                function captureFrame(time) {
+                    if (time >= duration || sampleIndex >= maxSamples) {
+                        // Analysis complete
+                        calculateFPS(frameDifferences, fileName);
+                        URL.revokeObjectURL(video.src); // Clean up
+                        return;
+                    }
+                    
+                    // Set video position
+                    video.currentTime = time;
+                    
+                    video.onseeked = function() {
+                        // Draw current frame to canvas
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // Get image data
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                        
+                        // Compare with previous frame
+                        if (lastImageData) {
+                            const diff = calculateFrameDifference(lastImageData, imageData);
+                            frameDifferences.push({
+                                time: time,
+                                diff: diff
+                            });
+                        }
+                        
+                        // Store current frame data
+                        lastImageData = imageData;
+                        
+                        // Update progress
+                        sampleIndex++;
+                        const progress = Math.round((sampleIndex / maxSamples) * 100);
+                        progressPercent.textContent = progress;
+                        progressFill.style.width = `${progress}%`;
+                        
+                        // Process next frame
+                        captureFrame(time + timeStep);
+                    };
+                }
+                
+                // Start frame capture
+                captureFrame(0);
+            }
+
+            function calculateFrameDifference(frame1, frame2) {
+                // Calculate percentage of pixels with significant changes
+                let differentPixels = 0;
+                const pixelsToCheck = Math.floor(frame1.length / 16); // Check 1/4 of pixels for performance
+                const threshold = 30; // RGB difference threshold
+                
+                for (let i = 0; i < frame1.length; i += 16) { // Sample every 4th pixel
+                    // Calculate RGB differences
+                    const rDiff = Math.abs(frame1[i] - frame2[i]);
+                    const gDiff = Math.abs(frame1[i+1] - frame2[i+1]);
+                    const bDiff = Math.abs(frame1[i+2] - frame2[i+2]);
+                    
+                    // Count significant changes
+                    if (rDiff > threshold || gDiff > threshold || bDiff > threshold) {
+                        differentPixels++;
+                    }
+                }
+                
+                return differentPixels / pixelsToCheck;
+            }
+
+            function calculateFPS(frameDifferences, fileName) {
+                if (frameDifferences.length < 5) {
+                    displayResults(30, fileName, "Not enough frames to analyze. Using default value.");
+                    return;
+                }
+                
+                // Find threshold for significant frame changes
+                // Sort differences to find median
+                const sortedDiffs = [...frameDifferences].sort((a, b) => a.diff - b.diff);
+                const medianDiff = sortedDiffs[Math.floor(sortedDiffs.length / 2)].diff;
+                
+                // Set threshold based on median (adaptive)
+                const threshold = Math.max(0.05, medianDiff * 1.5);
+                
+                // Find significant frame changes
+                const keyFrames = frameDifferences.filter(frame => frame.diff > threshold);
+                
+                if (keyFrames.length < 5) {
+                    displayResults(30, fileName, 
+                        "Not enough significant frame changes detected. Using default value.");
+                    return;
+                }
+                
+                // Sort by time
+                keyFrames.sort((a, b) => a.time - b.time);
+                
+                // Calculate intervals between key frames
+                const intervals = [];
+                for (let i = 1; i < keyFrames.length; i++) {
+                    intervals.push(keyFrames[i].time - keyFrames[i-1].time);
+                }
+                
+                // Calculate the most common interval (within tolerance)
+                const intervalGroups = groupSimilarValues(intervals, 0.002); // 2ms tolerance
+                
+                // Sort groups by frequency
+                intervalGroups.sort((a, b) => b.count - a.count);
+                
+                if (intervalGroups.length === 0) {
+                    displayResults(30, fileName, "Could not determine consistent frame intervals. Using default value.");
+                    return;
+                }
+                
+                // Use the most common interval
+                const mostCommonGroup = intervalGroups[0];
+                const avgInterval = mostCommonGroup.sum / mostCommonGroup.count;
+                
+                // Calculate FPS
+                const calculatedFps = 1 / avgInterval;
+                
+                // Round to 2 decimal places
+                const roundedFps = Math.round(calculatedFps * 100) / 100;
+                
+                // Match to standard frame rates if close
+                const matchedFps = findNearestStandardFPS(roundedFps);
+                
+                // Calculate confidence percentage
+                const confidence = (mostCommonGroup.count / intervals.length) * 100;
+                
+                displayResults(matchedFps, fileName, 
+                    `Analysis based on ${keyFrames.length} key frames. ` +
+                    `Raw calculation: ${roundedFps.toFixed(2)} FPS. ` +
+                    `Confidence: ${Math.round(confidence)}%.`);
+            }
+
+            function groupSimilarValues(values, tolerance) {
+                const groups = [];
+                
+                for (const value of values) {
+                    let foundGroup = false;
+                    
+                    // Try to find an existing group
+                    for (const group of groups) {
+                        if (Math.abs(group.value - value) < tolerance) {
+                            group.count++;
+                            group.sum += value;
+                            foundGroup = true;
+                            break;
+                        }
+                    }
+                    
+                    // Create new group if needed
+                    if (!foundGroup) {
+                        groups.push({
+                            value: value,
+                            count: 1,
+                            sum: value
+                        });
+                    }
+                }
+                
+                return groups;
+            }
+
+            function findNearestStandardFPS(fps) {
+                // Common standard frame rates
+                const standardRates = [
+                    23.976, 24, 25, 29.97, 30, 
+                    48, 50, 59.94, 60, 
+                    120, 144, 240
+                ];
+                
+                // If we're within 1% of a standard rate, use that rate
+                for (const rate of standardRates) {
+                    const percentDiff = Math.abs(fps - rate) / rate;
+                    if (percentDiff < 0.01) {
+                        return rate;
+                    }
+                }
+                
+                // Otherwise use the calculated rate
+                return fps;
+            }
+
+            function displayResults(fps, fileName, details) {
+                // Hide progress, show results
+                progressDiv.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+                
+                // Update FPS display
+                fpsValue.textContent = fps;
+                
+                // Show analysis details
+                analysisDetails.innerHTML = `
+                    <p>File analyzed: ${fileName}</p>
+                    <p>${details}</p>
+                    <p class="note">Note: Results are approximate and based on visual frame analysis, not metadata.</p>
+                `;
+            }
+
+            function showError(message) {
+                progressDiv.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                errorMessage.textContent = message;
+            }
+        });
+    </script>
 </body>
 </html>
