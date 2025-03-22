@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra-Fast FPS Detector</title>
+    <title>Accurate FPS Detector</title>
     <style>
         * {
             box-sizing: border-box;
@@ -136,7 +136,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Ultra-Fast FPS Detector</h1>
+        <h1>Accurate FPS Detector</h1>
         <div class="instructions">
             <p>Drag and drop a video file below to detect its true frame rate (FPS).</p>
             <p>Analysis is performed entirely in your browser - no data is uploaded.</p>
@@ -230,43 +230,34 @@
                 // Create a URL for the video file
                 const videoUrl = URL.createObjectURL(file);
                 
-                // Use high-speed frame detection approach
-                detectFPSFast(videoUrl, file.name);
+                // Detect the frame rate
+                detectFrameRate(videoUrl, file.name);
             }
 
-            function detectFPSFast(videoUrl, fileName) {
+            function detectFrameRate(videoUrl, fileName) {
                 const video = document.createElement('video');
                 video.preload = 'auto';
                 video.muted = true;
                 video.src = videoUrl;
                 
-                // Create a tiny canvas for frame comparison
+                // Create canvas for frame comparison
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d', { willReadFrequently: true });
-                canvas.width = 8;  // Extremely small for ultra-fast processing
-                canvas.height = 8;
+                canvas.width = 24;  // Small but detailed enough
+                canvas.height = 24;
                 
-                // Variables to track frames
-                const frameTimestamps = [];
-                let lastFrameHash = null;
-                let isAnalyzing = true;
-                let startTime;
+                // Variables for analysis
+                let analysisComplete = false;
                 
                 // Load video metadata
                 video.onloadedmetadata = function() {
-                    // Determine how many samples to take
-                    // Use just 25-30 samples total regardless of duration
-                    const numSamples = Math.min(30, Math.max(25, Math.ceil(video.duration)));
+                    const duration = video.duration;
                     
-                    // Define the sample points (times to check for frames)
-                    const samplePoints = [];
-                    for (let i = 0; i < numSamples; i++) {
-                        // Distribute samples evenly throughout the video
-                        samplePoints.push(i * (video.duration / numSamples));
-                    }
+                    // Create a balanced analysis plan
+                    const plan = createAnalysisPlan(duration);
                     
-                    // Start the analysis
-                    analyzeVideoFrames(samplePoints, 0);
+                    // Execute the analysis
+                    executeAnalysis(plan);
                 };
                 
                 video.onerror = function() {
@@ -274,182 +265,357 @@
                     showError('Error loading video. The format may not be supported by your browser.');
                 };
                 
-                function analyzeVideoFrames(samplePoints, currentIndex) {
-                    if (currentIndex >= samplePoints.length || !isAnalyzing) {
-                        // Analysis complete or cancelled
-                        finishAnalysis();
-                        return;
-                    }
-                    
-                    // Update progress
-                    const progress = Math.round((currentIndex / samplePoints.length) * 100);
-                    progressPercent.textContent = progress;
-                    progressFill.style.width = `${progress}%`;
-                    
-                    // Set video to the current sample point
-                    video.currentTime = samplePoints[currentIndex];
-                    
-                    // Once the video has seeked to the requested time
-                    video.onseeked = function() {
-                        // Capture the frame
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        
-                        // Get a simplified hash of the frame
-                        const frameHash = getSimpleFrameHash(ctx);
-                        
-                        // Compare with the last frame
-                        if (lastFrameHash === null || !isSameFrame(frameHash, lastFrameHash)) {
-                            // This is a new frame - record its timestamp
-                            frameTimestamps.push(video.currentTime);
-                            lastFrameHash = frameHash;
-                        }
-                        
-                        // Move to the next sample point
-                        analyzeVideoFrames(samplePoints, currentIndex + 1);
+                function createAnalysisPlan(duration) {
+                    // Create a multi-phase analysis plan
+                    const plan = {
+                        phases: []
                     };
-                }
-                
-                function getSimpleFrameHash(ctx) {
-                    // Get image data from the tiny canvas
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
                     
-                    // Super simple hash: take 9 points (center and corners)
-                    const points = [
-                        0, // Top-left
-                        4, // Top-right 
-                        canvas.width * 4 * (canvas.height - 1), // Bottom-left
-                        canvas.width * 4 * canvas.height - 4, // Bottom-right
-                        Math.floor(canvas.width * 4 * canvas.height / 2) // Center
-                    ];
+                    // Phase 1: Broad analysis (spaced samples across the entire video)
+                    const phase1Samples = 50; // Fixed sample count for phase 1
+                    const phase1Points = [];
                     
-                    // Extract RGB values at these points
-                    const hash = [];
-                    for (const point of points) {
-                        hash.push(
-                            imageData[point], 
-                            imageData[point + 1], 
-                            imageData[point + 2]
-                        );
+                    for (let i = 0; i < phase1Samples; i++) {
+                        phase1Points.push(i * (duration / phase1Samples));
                     }
                     
-                    return hash;
+                    plan.phases.push({
+                        name: "Broad Analysis",
+                        points: phase1Points,
+                        thresholdMultiplier: 1.0  // Standard sensitivity
+                    });
+                    
+                    // Phase 2: Dense analysis of motion segments
+                    // (This will be populated dynamically after phase 1)
+                    
+                    return plan;
                 }
                 
-                function isSameFrame(hash1, hash2) {
-                    // Check if hashes are similar enough to consider the same frame
-                    // We use a very low threshold since we're only comparing 5 points
-                    const threshold = 10;
+                function executeAnalysis(plan) {
+                    // Store all discovered frames
+                    const frameTimes = [];
+                    const frameHashes = [];
+                    let currentPhase = 0;
                     
-                    for (let i = 0; i < hash1.length; i++) {
-                        if (Math.abs(hash1[i] - hash2[i]) > threshold) {
-                            return false;
+                    // Start executing the first phase
+                    processPhase(currentPhase);
+                    
+                    function processPhase(phaseIndex) {
+                        if (phaseIndex >= plan.phases.length || analysisComplete) {
+                            // All phases complete, calculate results
+                            calculateFPS(frameTimes);
+                            return;
+                        }
+                        
+                        const phase = plan.phases[phaseIndex];
+                        console.log(`Executing phase: ${phase.name}`);
+                        
+                        // Process all points in this phase
+                        let pointIndex = 0;
+                        processNextPoint();
+                        
+                        function processNextPoint() {
+                            if (pointIndex >= phase.points.length) {
+                                // Phase complete, move to next phase or create dynamic phase
+                                if (phaseIndex === 0) {
+                                    // After phase 1, create a dynamic phase 2 based on results
+                                    createPhase2(frameTimes);
+                                }
+                                processPhase(phaseIndex + 1);
+                                return;
+                            }
+                            
+                            // Update progress (scale by phase)
+                            const phaseProgress = (pointIndex / phase.points.length) * 100;
+                            const overallProgress = Math.round(
+                                ((phaseIndex / Math.max(2, plan.phases.length)) * 100) + 
+                                (phaseProgress / Math.max(2, plan.phases.length))
+                            );
+                            progressPercent.textContent = overallProgress;
+                            progressFill.style.width = `${overallProgress}%`;
+                            
+                            // Set video to the current time point
+                            const timePoint = phase.points[pointIndex];
+                            video.currentTime = timePoint;
+                            
+                            // When the video has seeked to the requested time
+                            video.onseeked = function() {
+                                // Capture frame
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                
+                                // Get a hash of the frame
+                                const frameHash = getEnhancedFrameHash(ctx);
+                                
+                                // Check if this is a new frame
+                                let isNewFrame = true;
+                                if (frameHashes.length > 0) {
+                                    // Compare with previous frames
+                                    for (let i = frameHashes.length - 1; i >= Math.max(0, frameHashes.length - 5); i--) {
+                                        if (isSimilarFrame(frameHash, frameHashes[i], phase.thresholdMultiplier)) {
+                                            isNewFrame = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (isNewFrame) {
+                                    frameTimes.push(video.currentTime);
+                                    frameHashes.push(frameHash);
+                                }
+                                
+                                // Process next point
+                                pointIndex++;
+                                processNextPoint();
+                            };
                         }
                     }
                     
-                    return true;
-                }
-                
-                function finishAnalysis() {
-                    isAnalyzing = false;
-                    
-                    // If we don't have enough frames, show an error
-                    if (frameTimestamps.length < 5) {
-                        URL.revokeObjectURL(videoUrl);
-                        showError('Not enough distinct frames detected for accurate analysis.');
-                        return;
-                    }
-                    
-                    // Calculate intervals between frames
-                    const intervals = [];
-                    for (let i = 1; i < frameTimestamps.length; i++) {
-                        intervals.push(frameTimestamps[i] - frameTimestamps[i-1]);
-                    }
-                    
-                    // Find the most common interval (pattern)
-                    const intervalGroups = groupSimilarValues(intervals, 0.001); // 1ms tolerance
-                    
-                    if (intervalGroups.length === 0) {
-                        URL.revokeObjectURL(videoUrl);
-                        showError('Could not determine a consistent frame pattern.');
-                        return;
-                    }
-                    
-                    // Sort by frequency (most common first)
-                    intervalGroups.sort((a, b) => b.count - a.count);
-                    
-                    // Calculate FPS from the most common interval
-                    const dominantInterval = intervalGroups[0].value;
-                    const rawFps = 1 / dominantInterval;
-                    
-                    // Find nearest standard frame rate
-                    const fps = findNearestStandardFPS(rawFps);
-                    
-                    // Calculate confidence
-                    const confidence = (intervalGroups[0].count / intervals.length) * 100;
-                    
-                    // Display results
-                    displayResults(fps, fileName, 
-                        `Raw calculation: ${rawFps.toFixed(2)} FPS.<br>` +
-                        `Analyzed ${frameTimestamps.length} frames.<br>` +
-                        `Confidence: ${confidence.toFixed(1)}%`);
-                    
-                    // Clean up
-                    URL.revokeObjectURL(videoUrl);
-                }
-            }
-            
-            function groupSimilarValues(values, tolerance) {
-                const groups = [];
-                
-                for (const value of values) {
-                    let foundGroup = false;
-                    
-                    // Try to find an existing group
-                    for (const group of groups) {
-                        if (Math.abs(group.value - value) <= tolerance) {
-                            group.count++;
-                            group.sum += value;
-                            foundGroup = true;
-                            break;
+                    function createPhase2(frameTimes) {
+                        if (frameTimes.length < 5) {
+                            return; // Not enough data for phase 2
                         }
-                    }
-                    
-                    // Create new group if needed
-                    if (!foundGroup) {
-                        groups.push({
-                            value: value,
-                            count: 1,
-                            sum: value
+                        
+                        // Calculate intervals between detected frames
+                        const intervals = [];
+                        for (let i = 1; i < frameTimes.length; i++) {
+                            intervals.push(frameTimes[i] - frameTimes[i-1]);
+                        }
+                        
+                        // Find the median interval
+                        const sortedIntervals = [...intervals].sort((a, b) => a - b);
+                        const medianInterval = sortedIntervals[Math.floor(sortedIntervals.length / 2)];
+                        
+                        // Estimate FPS from phase 1
+                        const estimatedFps = 1 / medianInterval;
+                        
+                        // Create focused analysis regions
+                        const phase2Points = [];
+                        
+                        // Select 3 regions (beginning, middle, end) for detailed analysis
+                        const regionDuration = Math.min(0.5, video.duration / 6); // Half second or 1/6 of video
+                        const regions = [
+                            0, // Start
+                            Math.max(0, (video.duration / 2) - (regionDuration / 2)), // Middle
+                            Math.max(0, video.duration - regionDuration) // End
+                        ];
+                        
+                        // For each region, create dense sample points
+                        regions.forEach(regionStart => {
+                            // For suspected frame rates:
+                            // - Below 60fps: sample at 240Hz (4x oversampling)
+                            // - Above 60fps: sample at 480Hz (4-8x oversampling)
+                            const sampleRate = estimatedFps <= 60 ? 240 : 480;
+                            const sampleInterval = 1 / sampleRate;
+                            
+                            // Create dense sample points in this region
+                            for (let t = 0; t < regionDuration; t += sampleInterval) {
+                                phase2Points.push(regionStart + t);
+                            }
+                        });
+                        
+                        // Add phase 2 to the plan
+                        plan.phases.push({
+                            name: "Detailed Analysis",
+                            points: phase2Points,
+                            thresholdMultiplier: 0.8  // More sensitive for phase 2
                         });
                     }
-                }
-                
-                // Recalculate average values for each group
-                for (const group of groups) {
-                    group.value = group.sum / group.count;
-                }
-                
-                return groups;
-            }
-
-            function findNearestStandardFPS(fps) {
-                // Common standard frame rates
-                const standardRates = [
-                    23.976, 24, 25, 29.97, 30, 
-                    48, 50, 59.94, 60, 
-                    90, 100, 120, 144, 240
-                ];
-                
-                // If we're within 5% of a standard rate, use that rate
-                for (const rate of standardRates) {
-                    const percentDiff = Math.abs(fps - rate) / rate;
-                    if (percentDiff < 0.05) {
-                        return rate;
+                    
+                    function getEnhancedFrameHash(ctx) {
+                        // Get image data from the canvas
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                        
+                        // Create a more detailed hash using a grid of points
+                        const hash = [];
+                        const step = 6; // Check every 6th pixel (16 points in a 24x24 canvas)
+                        
+                        for (let y = 0; y < canvas.height; y += step) {
+                            for (let x = 0; x < canvas.width; x += step) {
+                                const idx = (y * canvas.width + x) * 4;
+                                // Use average of RGB for each point (ignore alpha)
+                                hash.push(Math.round((imageData[idx] + imageData[idx + 1] + imageData[idx + 2]) / 3));
+                            }
+                        }
+                        
+                        return hash;
+                    }
+                    
+                    function isSimilarFrame(hash1, hash2, thresholdMultiplier = 1.0) {
+                        // Calculate normalized difference
+                        let totalDiff = 0;
+                        
+                        for (let i = 0; i < hash1.length; i++) {
+                            totalDiff += Math.abs(hash1[i] - hash2[i]);
+                        }
+                        
+                        // Normalize by the hash length
+                        const avgDiff = totalDiff / hash1.length;
+                        
+                        // Adjust threshold based on phase
+                        const threshold = 12 * thresholdMultiplier;
+                        
+                        return avgDiff < threshold;
+                    }
+                    
+                    function calculateFPS(frameTimes) {
+                        if (frameTimes.length < 10) {
+                            showError('Not enough distinct frames detected. The video may have too little motion or variation.');
+                            URL.revokeObjectURL(videoUrl);
+                            return;
+                        }
+                        
+                        // Calculate all intervals between consecutive frames
+                        const intervals = [];
+                        for (let i = 1; i < frameTimes.length; i++) {
+                            intervals.push(frameTimes[i] - frameTimes[i-1]);
+                        }
+                        
+                        // Group similar intervals (within 0.3ms = 0.0003s)
+                        const intervalGroups = groupSimilarValues(intervals, 0.0003);
+                        
+                        // Sort by frequency (most common first)
+                        intervalGroups.sort((a, b) => b.count - a.count);
+                        
+                        // Perform advanced FPS determination
+                        const result = determineActualFPS(intervalGroups, intervals);
+                        
+                        // Display results
+                        displayResults(result.fps, fileName, 
+                            `Raw calculation: ${result.raw.toFixed(3)} FPS<br>` +
+                            `Analyzed ${frameTimes.length} frames across ${intervals.length} intervals<br>` +
+                            `Confidence: ${result.confidence.toFixed(1)}%`);
+                        
+                        // Clean up
+                        analysisComplete = true;
+                        URL.revokeObjectURL(videoUrl);
+                    }
+                    
+                    function determineActualFPS(intervalGroups, allIntervals) {
+                        if (intervalGroups.length === 0) {
+                            return { fps: 30, raw: 30, confidence: 0 };
+                        }
+                        
+                        // Get most common interval
+                        const primaryInterval = intervalGroups[0].value;
+                        let rawFps = 1 / primaryInterval;
+                        
+                        // Calculate confidence based on how prevalent the primary interval is
+                        const primaryConfidence = (intervalGroups[0].count / allIntervals.length) * 100;
+                        
+                        // If confidence is low, try to detect multiple interval patterns
+                        if (primaryConfidence < 70 && intervalGroups.length >= 2) {
+                            // Check if there's a harmonic relationship between intervals
+                            // (e.g., some frames might be duplicated or complex patterns)
+                            const secondaryInterval = intervalGroups[1].value;
+                            
+                            // Check if one interval is very close to a multiple of the other
+                            const ratio = primaryInterval / secondaryInterval;
+                            const nearestInteger = Math.round(ratio);
+                            
+                            if (Math.abs(ratio - nearestInteger) < 0.05 && nearestInteger > 1) {
+                                // We may have a mixed frame pattern (e.g., 3:2 pulldown)
+                                // Use the smallest interval as base
+                                rawFps = 1 / Math.min(primaryInterval, secondaryInterval);
+                            }
+                        }
+                        
+                        // Identify common frame rates
+                        const fps = findNearestStandardFPS(rawFps);
+                        
+                        return {
+                            fps: fps,
+                            raw: rawFps,
+                            confidence: primaryConfidence
+                        };
                     }
                 }
                 
-                // Otherwise round to 2 decimal places
-                return Math.round(fps * 100) / 100;
+                function groupSimilarValues(values, tolerance) {
+                    const groups = [];
+                    
+                    for (const value of values) {
+                        let foundGroup = false;
+                        
+                        // Try to find an existing group
+                        for (const group of groups) {
+                            if (Math.abs(group.value - value) <= tolerance) {
+                                group.count++;
+                                group.sum += value;
+                                foundGroup = true;
+                                break;
+                            }
+                        }
+                        
+                        // Create new group if needed
+                        if (!foundGroup) {
+                            groups.push({
+                                value: value,
+                                count: 1,
+                                sum: value
+                            });
+                        }
+                    }
+                    
+                    // Recalculate average values for each group
+                    for (const group of groups) {
+                        group.value = group.sum / group.count;
+                    }
+                    
+                    return groups;
+                }
+                
+                function findNearestStandardFPS(fps) {
+                    // Define common frame rates
+                    // First section: Cinema and broadcast standards
+                    // Second section: Computer display and gaming standards
+                    const standardRates = [
+                        // Film and video standards
+                        23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60,
+                        // Computer and gaming standards
+                        75, 90, 100, 120, 144, 240
+                    ];
+                    
+                    // If exact match or very close (within 0.5%), return the standard rate
+                    for (const rate of standardRates) {
+                        const percentDiff = Math.abs(fps - rate) / rate;
+                        if (percentDiff < 0.005) {
+                            return rate;
+                        }
+                    }
+                    
+                    // If reasonably close (within 3%), return the standard rate
+                    for (const rate of standardRates) {
+                        const percentDiff = Math.abs(fps - rate) / rate;
+                        if (percentDiff < 0.03) {
+                            return rate;
+                        }
+                    }
+                    
+                    // Check for common rational multiples/divisors of standard rates
+                    // (like 15fps which is 1/2 of 30fps, or 120fps which is 2x 60fps)
+                    const commonMultipleDivisors = [2, 3, 4];
+                    
+                    for (const rate of standardRates) {
+                        for (const factor of commonMultipleDivisors) {
+                            // Check if it's a divisor (e.g., 15fps from 30fps)
+                            const divisor = rate / factor;
+                            const percentDiffDivisor = Math.abs(fps - divisor) / divisor;
+                            if (percentDiffDivisor < 0.03) {
+                                return Math.round(divisor * 1000) / 1000;
+                            }
+                            
+                            // Check if it's a multiple (e.g., 120fps from 60fps)
+                            const multiple = rate * factor;
+                            const percentDiffMultiple = Math.abs(fps - multiple) / multiple;
+                            if (percentDiffMultiple < 0.03) {
+                                return Math.round(multiple * 1000) / 1000;
+                            }
+                        }
+                    }
+                    
+                    // Otherwise round to 3 decimal places
+                    return Math.round(fps * 1000) / 1000;
+                }
             }
 
             function displayResults(fps, fileName, details) {
