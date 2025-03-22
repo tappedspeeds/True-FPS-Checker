@@ -1,276 +1,866 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Military-Grade FPS Detector</title>
-    <style>
-        /* Maintain previous styling */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-        body { background: #f0f3f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); }
-        h1 { color: #1a73e8; margin-bottom: 20px; }
-        .drop-zone { border: 2px dashed #1a73e8; border-radius: 8px; padding: 30px; text-align: center; margin-bottom: 20px; transition: background 0.2s; }
-        .progress { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin: 20px 0; }
-        .progress-fill { height: 100%; background: #1a73e8; transition: width 0.3s ease; width: 0; }
-        .error { color: #dc3545; margin-top: 10px; display: none; }
-        pre { background: #f8f9fa; padding: 15px; border-radius: 6px; }
-    </style>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>True Video FPS Detector</title>
+     <style>
+         * {
+             box-sizing: border-box;
+             margin: 0;
+             padding: 0;
+         }
+         
+         body {
+             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+             line-height: 1.6;
+             color: #333;
+             background-color: #f7f9fc;
+             padding: 20px;
+         }
+         
+         .container {
+             max-width: 800px;
+             margin: 0 auto;
+             background: white;
+             padding: 30px;
+             border-radius: 8px;
+             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+         }
+         
+         h1 {
+             color: #2c3e50;
+             margin-bottom: 20px;
+             text-align: center;
+             font-weight: 600;
+         }
+         
+         .instructions {
+             margin-bottom: 25px;
+             text-align: center;
+         }
+         
+         .instructions p {
+             margin-bottom: 10px;
+             font-size: 16px;
+         }
+         
+         .file-drop {
+             border: 2px dashed #ccc;
+             border-radius: 8px;
+             padding: 40px 20px;
+             text-align: center;
+             cursor: pointer;
+             transition: border-color 0.3s, background-color 0.3s;
+             margin-bottom: 25px;
+         }
+         
+         .file-drop:hover, .file-drop.highlight {
+             border-color: #4a90e2;
+             background-color: #f0f7ff;
+         }
+         
+         .file-drop p {
+             margin-bottom: 15px;
+             font-size: 18px;
+             color: #555;
+         }
+         
+         .file-input {
+             display: inline-block;
+             padding: 12px 24px;
+             background-color: #4a90e2;
+             color: white;
+             border-radius: 4px;
+             font-weight: 500;
+             cursor: pointer;
+             transition: background-color 0.3s;
+         }
+         
+         .file-input:hover {
+             background-color: #3a7bc8;
+         }
+         
+         #fileSelector {
+             display: none;
+         }
+         
+         .progress {
+             height: 6px;
+             background-color: #eee;
+             border-radius: 3px;
+             margin-bottom: 25px;
+             overflow: hidden;
+         }
+         
+         .progress-fill {
+             height: 100%;
+             background-color: #4caf50;
+             width: 0%;
+             transition: width 0.3s ease;
+         }
+         
+         .progress-label {
+             text-align: center;
+             margin-bottom: 10px;
+             font-size: 14px;
+             color: #666;
+         }
+         
+         .results {
+             padding: 20px;
+             border: 1px solid #eee;
+             border-radius: 6px;
+             margin-top: 20px;
+             display: none;
+         }
+         
+         .results h2 {
+             margin-bottom: 15px;
+             color: #2c3e50;
+             font-weight: 600;
+         }
+         
+         .fps-value {
+             font-size: 40px;
+             font-weight: 700;
+             color: #4a90e2;
+             margin: 10px 0;
+             text-align: center;
+         }
+         
+         .analysis-details {
+             margin-top: 20px;
+             font-size: 14px;
+             color: #666;
+             line-height: 1.5;
+         }
+         
+         .error {
+             color: #e74c3c;
+             text-align: center;
+             margin-bottom: 15px;
+             font-weight: 500;
+             display: none;
+         }
+         
+         .note {
+             font-style: italic;
+             color: #777;
+             font-size: 13px;
+             margin-top: 10px;
+         }
+         
+         .hidden {
+             display: none;
+         }
+     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 True Frame Rate Analyzer</h1>
-        <div class="drop-zone" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
-            🎥 Drag video file here or click to select
-            <input type="file" id="fileInput" hidden accept="video/*" onchange="handleFileSelect(event)">
+        <h1>Video Frame Rate Detector</h1>
+        <div class="instructions">
+            <p>Drag and drop a video file below to detect its true frame rate (FPS).</p>
+            <p>Analysis is performed entirely in your browser - no data is uploaded.</p>
         </div>
-        <div class="progress">
-            <div class="progress-fill"></div>
+        
+        <div class="error" id="errorMessage"></div>
+        
+        <div class="file-drop" id="dropZone">
+            <p>Drop video file here</p>
+            <div class="file-input">Select video file</div>
+            <input type="file" id="fileSelector" accept="video/*">
         </div>
-        <pre id="results" style="display: none;"></pre>
-        <div class="error" id="error"></div>
+        
+        <div class="progress-container hidden" id="progressContainer">
+            <div class="progress-label">Analyzing: <span id="progressPercent">0</span>%</div>
+            <div class="progress">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        
+        <div class="results" id="resultsContainer">
+            <h2>Results:</h2>
+            <div class="fps-value" id="fpsValue">--</div>
+            <div class="analysis-details" id="analysisDetails"></div>
+        </div>
     </div>
-
-<script>
-const FRAME_RATE_STANDARDS = {
-    '23.976': ['NTSC Film'],
-    '24': ['Cinema'],
-    '25': ['PAL/SECAM'],
-    '29.97': ['NTSC Video'],
-    '30': ['ATSC Digital'],
-    '50': ['PAL HFR'],
-    '59.94': ['NTSC HFR'],
-    '60': ['ATSC Digital HFR'],
-    '120': ['Ultra HFR']
-};
-
-class ForensicFrameAnalyzer {
-    static async analyze(file) {
-        const video = await this.loadVideo(file);
-        return new Promise(resolve => {
-            const analyzer = new ForensicFrameAnalyzer(video, resolve);
-            analyzer.start();
-        });
-    }
-
-    static loadVideo(file) {
-        return new Promise((resolve, reject) => {
-            const video = document.createElement('video');
-            video.preload = 'metadata';
-            video.muted = true;
-            video.playsInline = true;
-            video.src = URL.createObjectURL(file);
-
-            video.onloadedmetadata = () => {
-                if (video.duration < 1) reject(new Error('Minimum 1 second video required'));
-                resolve(video);
-            };
-
-            video.onerror = () => reject(new Error('Failed to load video'));
-        });
-    }
-
-    constructor(video, callback) {
-        this.video = video;
-        this.callback = callback;
-        this.timings = [];
-        this.frameCount = 0;
-        this.startTime = Date.now();
-        this.analysisMethods = {
-            timingAnalysis: null,
-            pixelAnalysis: null,
-            durationAnalysis: null
-        };
-    }
-
-    start() {
-        this.video.play();
-        this.runTimingAnalysis();
-        this.runPixelAnalysis();
-        this.runDurationAnalysis();
-    }
-
-    // Method 1: Precise frame timing analysis
-    runTimingAnalysis() {
-        const handleFrame = (now, metadata) => {
-            if (this.timings.length > 0) {
-                const delta = metadata.mediaTime - this.timings[this.timings.length-1];
-                if (delta > 0) this.timings.push(metadata.mediaTime);
-            } else {
-                this.timings.push(metadata.mediaTime);
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropZone = document.getElementById('dropZone');
+            const fileSelector = document.getElementById('fileSelector');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressFill = document.getElementById('progressFill');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const fpsValue = document.getElementById('fpsValue');
+            const analysisDetails = document.getElementById('analysisDetails');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Event listeners for drag and drop
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('highlight');
+            });
+            
+            dropZone.addEventListener('dragleave', function() {
+                dropZone.classList.remove('highlight');
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('highlight');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    processFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // Click to select file
+            dropZone.addEventListener('click', function() {
+                fileSelector.click();
+            });
+            
+            fileSelector.addEventListener('change', function() {
+                if (fileSelector.files.length > 0) {
+                    processFile(fileSelector.files[0]);
+                }
+            });
+            
+            // Process the selected video file
+            function processFile(file) {
+                // Reset UI
+                errorMessage.style.display = 'none';
+                resultsContainer.style.display = 'none';
+                
+                // Validate file type
+                if (!file.type.includes('video/')) {
+                    showError('Please select a valid video file.');
+                    return;
+                }
+                
+                // Show progress indicator
+                progressContainer.classList.remove('hidden');
+                progressPercent.textContent = '0';
+                progressFill.style.width = '0%';
+                
+                // Create a URL for the video file
+                const videoUrl = URL.createObjectURL(file);
+                
+                // Detect the frame rate
+                detectTrueFPS(videoUrl, file.name);
             }
             
-            if (this.shouldContinue()) {
-                this.video.requestVideoFrameCallback(handleFrame);
-            } else {
-                this.analysisMethods.timingAnalysis = this.calculateTimingFPS();
-                this.checkCompletion();
-            }
-        };
-        this.video.requestVideoFrameCallback(handleFrame);
-    }
-
-    // Method 2: Pixel-change analysis
-    async runPixelAnalysis() {
-        const canvas = new OffscreenCanvas(160, 90);
-        const ctx = canvas.getContext('2d');
-        let lastHash = null;
-        let changes = 0;
-        
-        const trackFrame = async () => {
-            if (!this.shouldContinue()) return;
-            
-            ctx.drawImage(this.video, 0, 0, canvas.width, canvas.height);
-            const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const currentHash = this.getFrameHash(frame.data);
-            
-            if (lastHash && !this.hashMatch(lastHash, currentHash)) {
-                changes++;
-            }
-            lastHash = currentHash;
-            
-            await new Promise(requestAnimationFrame);
-            trackFrame();
-        };
-        
-        await trackFrame();
-        this.analysisMethods.pixelAnalysis = changes / (this.video.currentTime || 1);
-    }
-
-    // Method 3: Duration-based calculation
-    runDurationAnalysis() {
-        const checkDuration = () => {
-            if (this.video.readyState < 2 || !this.video.duration) {
-                setTimeout(checkDuration, 100);
-                return;
-            }
-            
-            this.video.pause();
-            this.video.currentTime = 0;
-            let frameCount = 0;
-            
-            const trackFrames = () => {
-                this.video.requestVideoFrameCallback((now, metadata) => {
-                    frameCount++;
-                    if (metadata.mediaTime < this.video.duration) {
-                        trackFrames();
-                    } else {
-                        this.analysisMethods.durationAnalysis = frameCount / this.video.duration;
-                        this.checkCompletion();
+            function detectTrueFPS(videoUrl, fileName) {
+                const video = document.createElement('video');
+                video.preload = 'auto';
+                video.muted = true;
+                video.src = videoUrl;
+                
+                // Create multi-resolution canvases for efficient analysis
+                const canvasHigh = document.createElement('canvas');
+                const ctxHigh = canvasHigh.getContext('2d', { willReadFrequently: true });
+                canvasHigh.width = 320;  // Higher resolution for precision
+                canvasHigh.height = 180;
+                
+                const canvasLow = document.createElement('canvas');
+                const ctxLow = canvasLow.getContext('2d', { willReadFrequently: true });
+                canvasLow.width = 32;   // Lower resolution for rapid scanning
+                canvasLow.height = 32;
+                
+                // Analysis state
+                let frameTransitions = [];
+                let frameDurations = [];
+                
+                // Handle errors
+                video.onerror = function() {
+                    URL.revokeObjectURL(videoUrl);
+                    showError('Error loading video. The format may not be supported by your browser.');
+                };
+                
+                // Once metadata is loaded, start analysis
+                video.onloadedmetadata = function() {
+                    const duration = video.duration;
+                    
+                    if (duration < 1) {
+                        showError('Video is too short to analyze. Please use a video that is at least 1 second long.');
+                        URL.revokeObjectURL(videoUrl);
+                        return;
                     }
-                });
-            };
+                    
+                    // Start with a quick scan to estimate FPS before detailed analysis
+                    performQuickScan(duration)
+                        .then(estimatedFPS => {
+                            return performPreciseAnalysis(duration, estimatedFPS);
+                        })
+                        .then(() => {
+                            calculateFinalResult();
+                        })
+                        .catch(error => {
+                            showError('Analysis error: ' + error.message);
+                            URL.revokeObjectURL(videoUrl);
+                        });
+                };
+                
+                // Phase 1: Quick scan to get initial FPS estimate
+                async function performQuickScan(duration) {
+                    return new Promise((resolve) => {
+                        updateProgress(5);
+                        
+                        // Sample points at beginning, middle, and end of video
+                        const samplePoints = [
+                            0.1,                     // Near start
+                            Math.min(duration/2, 5), // Middle or 5 seconds in
+                            Math.max(0, duration-1)  // Near end
+                        ];
+                        
+                        let pointIndex = 0;
+                        let lastHash = null;
+                        let quickTransitions = [];
+                        
+                        scanNextPoint();
+                        
+                        function scanNextPoint() {
+                            if (pointIndex >= samplePoints.length) {
+                                // Calculate initial estimate from quick transitions
+                                if (quickTransitions.length >= 2) {
+                                    const intervals = [];
+                                    for (let i = 1; i < quickTransitions.length; i++) {
+                                        intervals.push(quickTransitions[i] - quickTransitions[i-1]);
+                                    }
+                                    
+                                    // Get median interval for robustness
+                                    intervals.sort((a, b) => a - b);
+                                    const medianInterval = intervals[Math.floor(intervals.length/2)];
+                                    resolve(1 / medianInterval);
+                                } else {
+                                    // Not enough transitions detected, use default
+                                    resolve(30);
+                                }
+                                return;
+                            }
+                            
+                            const pointTime = samplePoints[pointIndex];
+                            let sampleOffset = 0;
+                            const sampleStep = 1/240; // Sample at 240Hz for quick scan
+                            const maxSampleTime = 0.5; // Sample for half a second
+                            
+                            // Set initial position
+                            video.currentTime = pointTime;
+                            
+                            video.onseeked = function quickScanSeek() {
+                                // Draw and hash current frame
+                                ctxLow.drawImage(video, 0, 0, canvasLow.width, canvasLow.height);
+                                const frameHash = getQuickHash(ctxLow);
+                                
+                                // Check if new frame compared to last
+                                if (lastHash === null || !isSimilarHash(frameHash, lastHash, 0.9)) {
+                                    quickTransitions.push(video.currentTime);
+                                    lastHash = frameHash;
+                                }
+                                
+                                // Advance to next sample time
+                                sampleOffset += sampleStep;
+                                
+                                if (sampleOffset < maxSampleTime) {
+                                    video.currentTime = pointTime + sampleOffset;
+                                } else {
+                                    // Move to next point
+                                    pointIndex++;
+                                    updateProgress(5 + (pointIndex * 5));
+                                    scanNextPoint();
+                                }
+                            };
+                        }
+                    });
+                }
+                
+                // Phase 2: Precise analysis using binary search for frame boundaries
+                async function performPreciseAnalysis(duration, estimatedFPS) {
+                    // Create adaptive sampling plan based on duration and estimated FPS
+                    const samplingPlan = createAdaptiveSamplingPlan(duration, estimatedFPS);
+                    
+                    // Process each segment in the sampling plan
+                    for (let i = 0; i < samplingPlan.length; i++) {
+                        const segment = samplingPlan[i];
+                        
+                        // Update progress
+                        updateProgress(20 + (i / samplingPlan.length * 70));
+                        
+                        // Find exact frame transitions in this segment
+                        await analyzeSegment(segment.startTime, segment.endTime, segment.precision);
+                    }
+                    
+                    // Sort transitions by time
+                    frameTransitions.sort((a, b) => a - b);
+                    
+                    return Promise.resolve();
+                }
+                
+                // Analyze a segment to find precise frame transitions
+                async function analyzeSegment(startTime, endTime, precision) {
+                    return new Promise((resolve) => {
+                        // Set video to segment start
+                        video.currentTime = startTime;
+                        
+                        video.onseeked = function initialSeek() {
+                            // Get reference frame hash
+                            ctxHigh.drawImage(video, 0, 0, canvasHigh.width, canvasHigh.height);
+                            const startHash = getDetailedHash(ctxHigh);
+                            let lastTransitionTime = startTime;
+                            
+                            // Use binary search to find the first transition
+                            findNextTransition(startTime, endTime, startHash, precision);
+                            
+                            // Find transitions using binary search
+                            function findNextTransition(low, high, referenceHash, currentPrecision) {
+                                // If we've reached our precision goal or range is too small
+                                if (high - low <= currentPrecision || high - low <= 0.001) {
+                                    // We've found a transition point
+                                    if (high > lastTransitionTime + 0.001) {
+                                        frameTransitions.push(high);
+                                        lastTransitionTime = high;
+                                        
+                                        // Continue searching in the remaining range
+                                        if (high < endTime - 0.001) {
+                                            // Get new reference hash
+                                            video.currentTime = high;
+                                            video.onseeked = function() {
+                                                ctxHigh.drawImage(video, 0, 0, canvasHigh.width, canvasHigh.height);
+                                                const newReferenceHash = getDetailedHash(ctxHigh);
+                                                findNextTransition(high, endTime, newReferenceHash, currentPrecision);
+                                            };
+                                        } else {
+                                            resolve();
+                                        }
+                                    } else {
+                                        resolve();
+                                    }
+                                    return;
+                                }
+                                
+                                // Check the midpoint
+                                const mid = (low + high) / 2;
+                                video.currentTime = mid;
+                                
+                                video.onseeked = function() {
+                                    ctxHigh.drawImage(video, 0, 0, canvasHigh.width, canvasHigh.height);
+                                    const midHash = getDetailedHash(ctxHigh);
+                                    
+                                    // Determine which half contains the transition
+                                    if (isSimilarHash(midHash, referenceHash, 0.95)) {
+                                        // Same frame, transition is in upper half
+                                        findNextTransition(mid, high, referenceHash, currentPrecision);
+                                    } else {
+                                        // Different frame, transition is in lower half
+                                        findNextTransition(low, mid, referenceHash, currentPrecision);
+                                    }
+                                };
+                            }
+                        };
+                    });
+                }
+                
+                // Create adaptive sampling plan optimized for the video
+                function createAdaptiveSamplingPlan(duration, estimatedFPS) {
+                    const plan = [];
+                    const frameTime = 1 / estimatedFPS;
+                    
+                    // Precision goal based on frame rate
+                    // Higher frame rates need higher precision
+                    const precision = frameTime / 10;
+                    
+                    // Create primary segments (beginning, middle, end)
+                    const primarySegments = [
+                        { start: 0, end: Math.min(duration, 2) },  // First 2 seconds
+                        { start: duration/2 - 1, end: duration/2 + 1 }, // Middle 2 seconds
+                        { start: Math.max(0, duration - 2), end: duration } // Last 2 seconds
+                    ];
+                    
+                    // Add primary segments
+                    for (const segment of primarySegments) {
+                        if (segment.end > segment.start) {
+                            plan.push({
+                                startTime: segment.start,
+                                endTime: segment.end,
+                                precision: precision
+                            });
+                        }
+                    }
+                    
+                    // Add sparse segments throughout
+                    if (duration > 10) {
+                        // For longer videos, add sparse segments to capture any changes
+                        const segmentCount = Math.min(10, Math.floor(duration / 10));
+                        for (let i = 1; i < segmentCount; i++) {
+                            const segmentStart = (duration * i / segmentCount);
+                            if (!isOverlapping(segmentStart, segmentStart + 0.5)) {
+                                plan.push({
+                                    startTime: segmentStart,
+                                    endTime: segmentStart + 0.5,
+                                    precision: precision
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Helper to check if a new segment overlaps with existing ones
+                    function isOverlapping(start, end) {
+                        for (const segment of plan) {
+                            if (!(end < segment.startTime || start > segment.endTime)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    
+                    return plan;
+                }
+                
+                // Calculate final FPS result
+                function calculateFinalResult() {
+                    // Calculate intervals between transitions
+                    for (let i = 1; i < frameTransitions.length; i++) {
+                        frameDurations.push(frameTransitions[i] - frameTransitions[i-1]);
+                    }
+                    
+                    if (frameDurations.length < 5) {
+                        showError('Not enough frame transitions detected. The video may have too little visual change.');
+                        URL.revokeObjectURL(video.src);
+                        return;
+                    }
+                    
+                    // Group similar durations (clustering with tight tolerance)
+                    const durationGroups = groupSimilarValues(frameDurations, 0.0003);
+                    
+                    // Sort by frequency
+                    durationGroups.sort((a, b) => b.count - a.count);
+                    
+                    // Analyze pattern
+                    const result = determineActualFPS(durationGroups, frameDurations);
+                    
+                    // Display results
+                    updateProgress(100);
+                    displayResults(result.fps, fileName, result.details);
+                    
+                    // Clean up
+                    URL.revokeObjectURL(video.src);
+                }
+                
+                // Get a quick hash for initial scanning
+                function getQuickHash(ctx) {
+                    const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data;
+                    const hash = [];
+                    
+                    // Sample central region (focus on where motion typically happens)
+                    const centerX = Math.floor(ctx.canvas.width / 4);
+                    const centerY = Math.floor(ctx.canvas.height / 4);
+                    const size = Math.floor(ctx.canvas.width / 2);
+                    
+                    // Sample 8x8 grid within center region
+                    const step = Math.floor(size / 8);
+                    
+                    for (let y = centerY; y < centerY + size; y += step) {
+                        for (let x = centerX; x < centerX + size; x += step) {
+                            const idx = (y * ctx.canvas.width + x) * 4;
+                            // Use perceptual brightness formula (human eye is more sensitive to green)
+                            const brightness = Math.round(
+                                0.299 * imageData[idx] + 
+                                0.587 * imageData[idx + 1] + 
+                                0.114 * imageData[idx + 2]
+                            );
+                            hash.push(brightness);
+                        }
+                    }
+                    
+                    return hash;
+                }
+                
+                // Get a detailed hash for precise frame comparison
+                function getDetailedHash(ctx) {
+                    const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data;
+                    const hash = [];
+                    
+                    // Multi-zone approach: sample from 5 zones (4 corners + center)
+                    // This makes detection robust against small partial motion
+                    const zones = [
+                        // Center zone
+                        {
+                            x: Math.floor(ctx.canvas.width * 0.3),
+                            y: Math.floor(ctx.canvas.height * 0.3),
+                            width: Math.floor(ctx.canvas.width * 0.4),
+                            height: Math.floor(ctx.canvas.height * 0.4)
+                        },
+                        // Top-left corner
+                        {
+                            x: 0,
+                            y: 0,
+                            width: Math.floor(ctx.canvas.width * 0.25),
+                            height: Math.floor(ctx.canvas.height * 0.25)
+                        },
+                        // Top-right corner
+                        {
+                            x: Math.floor(ctx.canvas.width * 0.75),
+                            y: 0,
+                            width: Math.floor(ctx.canvas.width * 0.25),
+                            height: Math.floor(ctx.canvas.height * 0.25)
+                        },
+                        // Bottom-left corner
+                        {
+                            x: 0,
+                            y: Math.floor(ctx.canvas.height * 0.75),
+                            width: Math.floor(ctx.canvas.width * 0.25),
+                            height: Math.floor(ctx.canvas.height * 0.25)
+                        },
+                        // Bottom-right corner
+                        {
+                            x: Math.floor(ctx.canvas.width * 0.75),
+                            y: Math.floor(ctx.canvas.height * 0.75),
+                            width: Math.floor(ctx.canvas.width * 0.25),
+                            height: Math.floor(ctx.canvas.height * 0.25)
+                        }
+                    ];
+                    
+                    // Sample each zone
+                    for (const zone of zones) {
+                        const step = Math.max(1, Math.floor(zone.width / 8));
+                        
+                        for (let y = zone.y; y < zone.y + zone.height; y += step) {
+                            for (let x = zone.x; x < zone.x + zone.width; x += step) {
+                                const idx = (y * ctx.canvas.width + x) * 4;
+                                // Store full RGB values for more precise comparison
+                                hash.push(imageData[idx], imageData[idx + 1], imageData[idx + 2]);
+                            }
+                        }
+                    }
+                    
+                    return hash;
+                }
+                
+                // Compare two hashes with adaptive threshold
+                function isSimilarHash(hash1, hash2, threshold) {
+                    if (hash1.length !== hash2.length) return false;
+                    
+                    let totalDiff = 0;
+                    const sampleCount = hash1.length;
+                    
+                    for (let i = 0; i < sampleCount; i++) {
+                        totalDiff += Math.abs(hash1[i] - hash2[i]);
+                    }
+                    
+                    const avgDiff = totalDiff / sampleCount;
+                    const normalizedDiff = avgDiff / 255; // Normalize to 0-1 range
+                    
+                    return normalizedDiff < (1 - threshold);
+                }
+                
+                // Group similar values with statistical clustering
+                function groupSimilarValues(values, tolerance) {
+                    // Sort values first for more efficient grouping
+                    const sortedValues = [...values].sort((a, b) => a - b);
+                    const groups = [];
+                    
+                    // Start first group
+                    let currentGroup = {
+                        value: sortedValues[0],
+                        count: 1,
+                        sum: sortedValues[0],
+                        values: [sortedValues[0]]
+                    };
+                    
+                    // Group consecutive similar values
+                    for (let i = 1; i < sortedValues.length; i++) {
+                        const value = sortedValues[i];
+                        
+                        if (Math.abs(value - currentGroup.value) <= tolerance) {
+                            // Add to current group
+                            currentGroup.count++;
+                            currentGroup.sum += value;
+                            currentGroup.values.push(value);
+                            // Recalculate group average
+                            currentGroup.value = currentGroup.sum / currentGroup.count;
+                        } else {
+                            // Finalize current group and start a new one
+                            groups.push(currentGroup);
+                            currentGroup = {
+                                value: value,
+                                count: 1,
+                                sum: value,
+                                values: [value]
+                            };
+                        }
+                    }
+                    
+                    // Add the last group
+                    if (currentGroup.count > 0) {
+                        groups.push(currentGroup);
+                    }
+                    
+                    // Add statistical info to each group
+                    for (const group of groups) {
+                        if (group.values.length > 1) {
+                            // Calculate standard deviation
+                            let variance = 0;
+                            for (const val of group.values) {
+                                variance += Math.pow(val - group.value, 2);
+                            }
+                            group.stdDev = Math.sqrt(variance / group.count);
+                        } else {
+                            group.stdDev = 0;
+                        }
+                    }
+                    
+                    return groups;
+                }
+                
+                // Determine the actual FPS from duration data
+                function determineActualFPS(durationGroups, allDurations) {
+                    if (durationGroups.length === 0) {
+                        return { fps: 30, details: "No clear pattern detected." };
+                    }
+                    
+                    // Get primary interval (most common)
+                    const primaryInterval = durationGroups[0].value;
+                    let rawFps = 1 / primaryInterval;
+                    
+                    // Calculate coverage and details
+                    const primaryCoverage = durationGroups[0].count / allDurations.length;
+                    let details = `Primary frame duration: ${primaryInterval.toFixed(6)}s (${rawFps.toFixed(3)} FPS)<br>`;
+                    details += `Primary duration coverage: ${(primaryCoverage*100).toFixed(1)}%<br>`;
+                    
+                    // Check for special patterns (3:2 pulldown, etc.)
+                    let patternDetected = false;
+                    let patternFps = 0;
+                    
+                    if (durationGroups.length >= 2) {
+                        const secondaryInterval = durationGroups[1].value;
+                        const secondaryCoverage = durationGroups[1].count / allDurations.length;
+                        const combinedCoverage = primaryCoverage + secondaryCoverage;
+                        
+                        if (combinedCoverage > 0.9) {
+                            // Check for 3:2 pulldown (24fps film -> 60fps video)
+                            if (Math.abs(primaryInterval/secondaryInterval - 1.5) < 0.05 || 
+                                Math.abs(secondaryInterval/primaryInterval - 1.5) < 0.05) {
+                                patternDetected = true;
+                                patternFps = 24;
+                                details += `<strong>Detected 3:2 pulldown pattern</strong> (24fps film content displayed at 60fps)<br>`;
+                            }
+                            // Check for 24fps -> 30fps conversion (alternating 1:2 frames)
+                            else if (Math.abs(primaryInterval/secondaryInterval - 2) < 0.05 || 
+                                     Math.abs(secondaryInterval/primaryInterval - 2) < 0.05) {
+                                patternDetected = true;
+                                patternFps = 24;
+                                details += `<strong>Detected 24fps content</strong> converted to 30fps<br>`;
+                            }
+                        }
+                    }
+                    
+                    // Find nearest standard frame rate
+                    const standardFps = findNearestStandardFPS(rawFps);
+                    details += `Nearest standard rate: ${standardFps} FPS<br>`;
+                    
+                    // Calculate final result
+                    let finalFps;
+                    if (patternDetected) {
+                        finalFps = patternFps;
+                    } else {
+                        finalFps = standardFps;
+                    }
+                    
+                    // Additional analysis details
+                    details += `Analyzed ${frameTransitions.length} precise frame transitions<br>`;
+                    details += `Analysis method: Binary search with multi-zone perceptual hashing`;
+                    
+                    return {
+                        fps: finalFps,
+                        details: details
+                    };
+                }
+                
+                // Find nearest standard frame rate
+                function findNearestStandardFPS(fps) {
+                    // Common standard frame rates
+                    const standardRates = [
+                        // Film and broadcast standards
+                        23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60,
+                        // Computer and gaming standards
+                        75, 90, 100, 120, 144, 240, 360
+                    ];
+                    
+                    // Very close match (within 0.5%)
+                    for (const rate of standardRates) {
+                        if (Math.abs(fps - rate) / rate < 0.005) {
+                            return rate;
+                        }
+                    }
+                    
+                    // Close match (within 3%)
+                    for (const rate of standardRates) {
+                        if (Math.abs(fps - rate) / rate < 0.03) {
+                            return rate;
+                        }
+                    }
+                    
+                    // Check for rational multiples/divisors of standard rates
+                    for (const rate of standardRates) {
+                        // Check if it's half of a standard rate (e.g., 15fps from 30fps)
+                        if (Math.abs(fps - rate/2) / (rate/2) < 0.03) {
+                            return rate/2;
+                        }
+                        
+                        // Check if it's double a standard rate
+                        if (Math.abs(fps - rate*2) / (rate*2) < 0.03) {
+                            return rate*2;
+                        }
+                        
+                        // Check for other common factors (1/3, 1/4, 3/4, etc.)
+                        const factors = [3, 4, 1.5, 0.75, 1.25];
+                        for (const factor of factors) {
+                            if (Math.abs(fps - rate/factor) / (rate/factor) < 0.03) {
+                                return Math.round((rate/factor) * 1000) / 1000;
+                            }
+                            if (Math.abs(fps - rate*factor) / (rate*factor) < 0.03) {
+                                return Math.round((rate*factor) * 1000) / 1000;
+                            }
+                        }
+                    }
+                    
+                    // Round to 3 decimal places for other values
+                    return Math.round(fps * 1000) / 1000;
+                }
+                
+                // Update progress indicator
+                function updateProgress(percent) {
+                    progressPercent.textContent = Math.round(percent);
+                    progressFill.style.width = `${percent}%`;
+                }
+            }
             
-            this.video.play();
-            trackFrames();
-        };
-        checkDuration();
-    }
-
-    // Analysis core
-    calculateTimingFPS() {
-        const intervals = [];
-        for (let i = 1; i < this.timings.length; i++) {
-            intervals.push(this.timings[i] - this.timings[i-1]);
-        }
-        return 1 / (this.median(intervals) || 0.0166667);
-    }
-
-    getFrameHash(data) {
-        let hash = 0;
-        for (let i = 0; i < data.length; i += 4) {
-            hash = (hash << 5) - hash + data[i] + data[i+1] + data[i+2];
-        }
-        return hash;
-    }
-
-    hashMatch(a, b) {
-        return Math.abs(a - b) < 1000000; // Adjust based on testing
-    }
-
-    median(values) {
-        values.sort((a, b) => a - b);
-        const half = Math.floor(values.length / 2);
-        return values.length % 2 
-            ? values[half] 
-            : (values[half - 1] + values[half]) / 2;
-    }
-
-    shouldContinue() {
-        return Date.now() - this.startTime < 5000 && 
-               this.video.currentTime < this.video.duration - 0.5;
-    }
-
-    checkCompletion() {
-        if (Object.values(this.analysisMethods).every(v => v !== null)) {
-            this.video.pause();
-            URL.revokeObjectURL(this.video.src);
-            this.callback(this.resolveFinalFPS());
-        }
-    }
-
-    resolveFinalFPS() {
-        const results = Object.values(this.analysisMethods);
-        const [timing, pixel, duration] = results;
-        
-        // Cross-validate all three methods
-        const candidates = results.map(fps => 
-            Object.keys(FRAME_RATE_STANDARDS).reduce((a, b) => 
-                Math.abs(fps - a) < Math.abs(fps - b) ? a : b
-            )
-        );
-        
-        // If all agree on standard
-        if (new Set(candidates).size === 1) {
-            return candidates[0];
-        }
-        
-        // If two methods agree
-        const counts = candidates.reduce((a,c) => (a[c] = (a[c]||0)+1, a), {});
-        const majority = Object.entries(counts).find(([k,v]) => v >= 2);
-        if (majority) return majority[0];
-        
-        // Fallback to median of precise measurements
-        const preciseValues = [timing, duration].sort();
-        return Math.round(preciseValues[1] * 1000)/1000;
-    }
-}
-
-// UI Handling
-async function handleFile(file) {
-    try {
-        resetUI();
-        const result = await ForensicFrameAnalyzer.analyze(file);
-        showResults(result, file.name);
-    } catch (error) {
-        showError(error.message);
-    }
-}
-
-function showResults(fps, filename) {
-    const results = document.getElementById('results');
-    results.style.display = 'block';
-    const standard = FRAME_RATE_STANDARDS[fps] ? 
-        ` (${FRAME_RATE_STANDARDS[fps].join(', ')})` : '';
-    results.innerHTML = `✅ Final Verdict\nFile: ${filename}\nTrue Frame Rate: ${fps}${standard}`;
-}
-
-function resetUI() {
-    document.getElementById('results').style.display = 'none';
-    document.querySelector('.progress-fill').style.width = '0';
-    document.getElementById('error').style.display = 'none';
-}
-
-function showError(msg) {
-    document.getElementById('error').style.display = 'block';
-    document.getElementById('error').textContent = msg;
-}
-
-// Event handlers
-function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
-function handleDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); }
-function handleFileSelect(e) { handleFile(e.target.files[0]); }
-document.querySelector('.drop-zone').addEventListener('click', () => document.getElementById('fileInput').click());
-</script>
+            // Display the results
+            function displayResults(fps, fileName, details) {
+                // Hide progress, show results
+                progressContainer.classList.add('hidden');
+                resultsContainer.style.display = 'block';
+                
+                // Update results
+                fpsValue.textContent = fps;
+                
+                analysisDetails.innerHTML = `
+                    <p>File analyzed: ${fileName}</p>
+                    <p>${details}</p>
+                    <p class="note">Note: Results are based on precise frame boundary detection using binary search.</p>
+                `;
+            }
+            
+            // Show error message
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                progressContainer.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
