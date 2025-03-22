@@ -3,500 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick FPS Detector</title>
+    <title>Video Frame Rate Detector</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
             background-color: #f5f5f5;
-            padding: 20px;
+            color: #333;
+            line-height: 1.6;
         }
-
+        
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
         }
-
+        
         h1 {
             text-align: center;
             margin-bottom: 20px;
             color: #2c3e50;
         }
-
+        
         .instructions {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        #drop-zone {
-            border: 3px dashed #ccc;
+            background-color: #fff;
             border-radius: 8px;
-            padding: 50px;
-            text-align: center;
+            padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .drop-zone {
+            border: 3px dashed #3498db;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: #ecf0f1;
             transition: all 0.3s;
+            margin-bottom: 20px;
             cursor: pointer;
         }
-
-        #drop-zone.highlight {
-            background-color: #f0f8ff;
-            border-color: #4a90e2;
+        
+        .drop-zone.dragover {
+            background-color: #d6eaf8;
+            border-color: #2980b9;
         }
-
-        #drop-zone p {
-            margin-bottom: 10px;
-            color: #666;
+        
+        .drop-zone p {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #7f8c8d;
         }
-
-        #file-input {
-            display: none;
-        }
-
-        .file-label {
-            display: inline-block;
-            background-color: #4a90e2;
+        
+        .file-btn {
+            background-color: #3498db;
             color: white;
-            padding: 12px 24px;
+            border: none;
+            padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
             transition: background-color 0.3s;
-            font-weight: 500;
         }
-
-        .file-label:hover {
-            background-color: #357abd;
+        
+        .file-btn:hover {
+            background-color: #2980b9;
         }
-
-        #result, #progress, #error {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-
-        #result h2 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        #fps-value {
-            font-weight: bold;
-            font-size: 2em;
-            color: #4a90e2;
-        }
-
+        
         .hidden {
             display: none;
         }
-
-        #error {
-            background-color: #ffebee;
-            color: #c62828;
+        
+        .progress {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-
+        
         .progress-bar {
-            width: 100%;
             height: 20px;
-            background-color: #e0e0e0;
+            background-color: #ecf0f1;
             border-radius: 10px;
-            margin-top: 10px;
+            margin: 10px 0;
             overflow: hidden;
         }
-
-        #progress-fill {
+        
+        .progress-fill {
             height: 100%;
-            background-color: #4caf50;
+            background-color: #3498db;
             width: 0%;
-            transition: width 0.3s;
+            transition: width 0.3s ease;
         }
-
-        #analysis-details {
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: #666;
+        
+        .result {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-
+        
+        .fps-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        
+        .error {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #e74c3c;
+        }
+        
+        .analysis-details {
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: left;
+        }
+        
         .note {
             font-style: italic;
-            margin-top: 10px;
-            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .drop-zone {
+                padding: 20px 10px;
+            }
+            
+            .fps-display {
+                font-size: 36px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Quick FPS Detector</h1>
+        <h1>Video Frame Rate Detector</h1>
         <div class="instructions">
             <p>Drag and drop a video file below to detect its true frame rate (FPS).</p>
             <p>Analysis is performed entirely in your browser - no data is uploaded.</p>
         </div>
-        <div id="drop-zone">
+        
+        <div id="dropZone" class="drop-zone">
             <p>Drop your video file here</p>
             <p>or</p>
-            <input type="file" id="file-input" accept="video/*">
-            <label for="file-input" class="file-label">Select a video file</label>
+            <label for="fileInput" class="file-btn">Select Video File</label>
+            <input type="file" id="fileInput" accept="video/*" style="display:none">
         </div>
-        <div id="result" class="hidden">
-            <h2>Results:</h2>
-            <p>Detected frame rate: <span id="fps-value">--</span> FPS</p>
-            <div id="analysis-details"></div>
-        </div>
-        <div id="progress" class="hidden">
-            <p>Analyzing video... <span id="progress-percent">0</span>%</p>
+        
+        <div id="progress" class="progress hidden">
+            <h2>Analyzing video...</h2>
             <div class="progress-bar">
-                <div id="progress-fill"></div>
+                <div id="progressFill" class="progress-fill"></div>
             </div>
+            <p><span id="progressPercent">0</span>% complete</p>
         </div>
-        <div id="error" class="hidden">
-            <p id="error-message"></p>
+        
+        <div id="error" class="error hidden">
+            <h2>Error</h2>
+            <p id="errorText"></p>
+        </div>
+        
+        <div id="result" class="result hidden">
+            <h2>Results:</h2>
+            <div class="fps-display">
+                <span id="fpsValue">--</span> FPS
+            </div>
+            <div id="analysisDetails" class="analysis-details"></div>
         </div>
     </div>
-
+    
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropZone = document.getElementById('drop-zone');
-            const fileInput = document.getElementById('file-input');
-            const resultDiv = document.getElementById('result');
-            const fpsValue = document.getElementById('fps-value');
-            const analysisDetails = document.getElementById('analysis-details');
-            const progressDiv = document.getElementById('progress');
-            const progressPercent = document.getElementById('progress-percent');
-            const progressFill = document.getElementById('progress-fill');
-            const errorDiv = document.getElementById('error');
-            const errorMessage = document.getElementById('error-message');
-
-            // Prevent default drag behaviors
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const progressDiv = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const resultDiv = document.getElementById('result');
+        const fpsValue = document.getElementById('fpsValue');
+        const analysisDetails = document.getElementById('analysisDetails');
+        const errorDiv = document.getElementById('error');
+        const errorText = document.getElementById('errorText');
+        
+        // Handle file drops and uploads
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                processFile(e.dataTransfer.files[0]);
             }
-
-            // Highlight drop zone when item is dragged over it
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.add('highlight'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.remove('highlight'), false);
-            });
-
-            // Handle dropped files
-            dropZone.addEventListener('drop', handleDrop, false);
-            fileInput.addEventListener('change', handleFileSelect, false);
-            dropZone.addEventListener('click', () => fileInput.click());
-
-            function handleDrop(e) {
-                const files = e.dataTransfer.files;
-                if (files.length) processVideoFile(files[0]);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                processFile(e.target.files[0]);
             }
-
-            function handleFileSelect(e) {
-                const files = e.target.files;
-                if (files.length) processVideoFile(files[0]);
+        });
+        
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        function processFile(file) {
+            // Check if it's a video file
+            if (!file.type.startsWith('video/')) {
+                showError('Please select a valid video file.');
+                return;
             }
-
-            function processVideoFile(file) {
-                // Reset UI
-                resultDiv.classList.add('hidden');
-                errorDiv.classList.add('hidden');
+            
+            // Hide previous results and errors
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            
+            // Create a URL for the video file
+            const videoUrl = URL.createObjectURL(file);
+            
+            // Detect the frame rate
+            detectFrameRate(videoUrl, file.name);
+        }
+        
+        function detectFrameRate(videoUrl, fileName) {
+            // Create video element for analysis
+            const video = document.createElement('video');
+            video.preload = 'auto';
+            video.muted = true;
+            video.src = videoUrl;
+            
+            // Create canvas for frame analysis
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = 32;  // Small size for performance
+            canvas.height = 32;
+            
+            // Show progress
+            progressDiv.classList.remove('hidden');
+            progressPercent.textContent = '0';
+            progressFill.style.width = '0%';
+            
+            video.onloadedmetadata = function() {
+                analyzeVideo();
+            };
+            
+            video.onerror = function() {
+                URL.revokeObjectURL(videoUrl);
+                showError('Error loading video. The format may not be supported by your browser.');
+            };
+            
+            // Binary search approach for faster convergence
+            function analyzeVideo() {
+                // Get length of video in seconds
+                const duration = video.duration;
+                const testSegments = Math.min(8, Math.floor(duration));
                 
-                // Validate file type
-                if (!file.type.startsWith('video/')) {
-                    showError('Please select a valid video file.');
+                if (testSegments < 1) {
+                    showError("Video too short to analyze");
                     return;
                 }
-
-                // Show progress indicator
-                progressDiv.classList.remove('hidden');
-                progressPercent.textContent = '0';
-                progressFill.style.width = '0%';
-
-                // Create a URL for the video file
-                const videoUrl = URL.createObjectURL(file);
                 
-                // Start the analysis
-                analyzeFPS(videoUrl, file.name);
-            }
-
-            function analyzeFPS(videoUrl, fileName) {
-                const video = document.createElement('video');
-                video.preload = 'auto';
-                video.muted = true;
-                video.src = videoUrl;
+                // Pick test segments spread throughout the video
+                const segmentTimes = [];
+                for (let i = 0; i < testSegments; i++) {
+                    segmentTimes.push(i * Math.floor(duration / testSegments));
+                }
                 
-                video.onloadedmetadata = function() {
-                    // Create canvas for frame comparison
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-                    
-                    // Set canvas size - medium size for good balance of speed and accuracy
-                    canvas.width = 64;
-                    canvas.height = 64;
-                    
-                    // Select frames to analyze (9 frames = 8 intervals)
-                    const framesToAnalyze = 9;
-                    const framePositions = [];
-                    
-                    // Ensure we have enough duration for analysis
-                    if (video.duration < 1) {
-                        showError('Video is too short to analyze accurately.');
-                        URL.revokeObjectURL(videoUrl);
+                let segmentIndex = 0;
+                const results = [];
+                
+                analyzeNextSegment();
+                
+                function analyzeNextSegment() {
+                    if (segmentIndex >= segmentTimes.length) {
+                        // All segments analyzed
+                        calculateFinalResult(results);
                         return;
                     }
                     
-                    // Get 9 evenly spaced positions
-                    const maxPosition = Math.max(0, video.duration - 0.1);
-                    for (let i = 0; i < framesToAnalyze; i++) {
-                        framePositions.push((maxPosition / (framesToAnalyze - 1)) * i);
-                    }
+                    // Update progress
+                    const progress = Math.round((segmentIndex / segmentTimes.length) * 100);
+                    progressPercent.textContent = progress;
+                    progressFill.style.width = `${progress}%`;
                     
-                    // Arrays to store frame data
-                    const exactFrameTimes = [];
+                    const startTime = segmentTimes[segmentIndex];
                     
-                    // Process each position
-                    let currentPosition = 0;
-                    processNextPosition();
-                    
-                    function processNextPosition() {
-                        if (currentPosition >= framePositions.length) {
-                            // All positions processed, calculate frame rate
-                            calculateFPS();
-                            return;
-                        }
-                        
-                        // Update progress
-                        const progress = Math.round((currentPosition / framePositions.length) * 100);
-                        progressPercent.textContent = progress;
-                        progressFill.style.width = `${progress}%`;
-                        
-                        // Set approximate position
-                        const targetTime = framePositions[currentPosition];
-                        
-                        // Use precise frame detection
-                        findExactFrameTime(targetTime, function(exactTime) {
-                            if (exactTime !== null) {
-                                exactFrameTimes.push(exactTime);
-                            }
-                            
-                            // Move to next position
-                            currentPosition++;
-                            processNextPosition();
-                        });
-                    }
-                    
-                    // Function to find the exact frame boundary
-                    function findExactFrameTime(approximateTime, callback) {
-                        // First, seek to the approximate time
-                        video.currentTime = approximateTime;
-                        
-                        video.onseeked = function() {
-                            // Capture the reference frame
-                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            const referenceHash = getFrameHash(ctx);
-                            
-                            // Now precisely scan forward in very small increments to find when the frame changes
-                            let currentTime = video.currentTime;
-                            const maxTime = Math.min(video.duration, currentTime + 0.1); // Look 100ms forward max
-                            const timeStep = 0.001; // 1ms increments
-                            
-                            findNextFrame();
-                            
-                            function findNextFrame() {
-                                currentTime += timeStep;
-                                
-                                if (currentTime >= maxTime) {
-                                    // Reached limit without finding next frame
-                                    callback(video.currentTime); // Use current time as fallback
-                                    return;
-                                }
-                                
-                                video.currentTime = currentTime;
-                                
-                                video.onseeked = function() {
-                                    // Capture current frame
-                                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                                    const currentHash = getFrameHash(ctx);
-                                    
-                                    // Check if this is a different frame
-                                    if (!areFramesSimilar(referenceHash, currentHash)) {
-                                        // Found a frame boundary
-                                        callback(video.currentTime);
-                                    } else {
-                                        // Keep searching
-                                        findNextFrame();
-                                    }
-                                };
-                            }
-                        };
-                    }
-                    
-                    function getFrameHash(ctx) {
-                        // Get image data
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                        
-                        // For speed, sample every 16th pixel
-                        const hash = [];
-                        for (let i = 0; i < imageData.length; i += 64) {
-                            hash.push(imageData[i], imageData[i+1], imageData[i+2]);
-                        }
-                        
-                        return hash;
-                    }
-                    
-                    function areFramesSimilar(hash1, hash2) {
-                        let diff = 0;
-                        for (let i = 0; i < hash1.length; i++) {
-                            diff += Math.abs(hash1[i] - hash2[i]);
-                        }
-                        
-                        // Normalize by hash length and return comparison
-                        return (diff / hash1.length) < 15; // Threshold tuned for optimal detection
-                    }
-                    
-                    function calculateFPS() {
-                        // Calculate intervals between frame times
-                        const intervals = [];
-                        for (let i = 1; i < exactFrameTimes.length; i++) {
-                            const interval = exactFrameTimes[i] - exactFrameTimes[i-1];
-                            if (interval > 0.001) { // Ignore extremely small intervals (potential seeking issues)
-                                intervals.push(interval);
-                            }
-                        }
-                        
-                        if (intervals.length < 3) {
-                            showError('Could not detect enough frame changes. The video might have too little motion.');
-                            URL.revokeObjectURL(videoUrl);
-                            return;
-                        }
-                        
-                        // Group the intervals into buckets (within 1ms tolerance)
-                        const intervalBuckets = groupSimilarValues(intervals, 0.001);
-                        
-                        // Sort buckets by count (most common first)
-                        intervalBuckets.sort((a, b) => b.count - a.count);
-                        
-                        // Use the most common interval as our frame time
-                        const dominantFrameInterval = intervalBuckets[0].value;
-                        
-                        // Calculate the frame rate
-                        const calculatedFPS = 1 / dominantFrameInterval;
-                        
-                        // Find the nearest standard frame rate
-                        const detectedFPS = findNearestStandardFPS(calculatedFPS);
-                        
-                        // Calculate confidence based on how consistent the intervals are
-                        const confidence = (intervalBuckets[0].count / intervals.length) * 100;
-                        
-                        // Display the results
-                        displayResults(detectedFPS, fileName, 
-                            `Raw calculation: ${calculatedFPS.toFixed(2)} FPS<br>` +
-                            `Based on ${exactFrameTimes.length} frames and ${intervals.length} intervals<br>` +
-                            `Dominant interval: ${(dominantFrameInterval * 1000).toFixed(2)}ms<br>` +
-                            `Confidence: ${confidence.toFixed(1)}%`);
-                        
-                        // Clean up
-                        URL.revokeObjectURL(videoUrl);
-                    }
-                };
-                
-                video.onerror = function() {
-                    URL.revokeObjectURL(videoUrl);
-                    showError('Error loading video. The format may not be supported by your browser.');
-                };
+                    // Binary search for frame times
+                    binarySearchFrames(startTime, startTime + 1, (framesInSegment) => {
+                        results.push(framesInSegment);
+                        segmentIndex++;
+                        analyzeNextSegment();
+                    });
+                }
             }
             
-            function groupSimilarValues(values, tolerance) {
-                const groups = [];
+            function binarySearchFrames(startTime, endTime, callback) {
+                // First, check for frame boundaries at various resolutions
+                // Start with coarse resolution, then refine
+                const initialSampleCount = 30; // Initial coarse sampling
                 
-                for (const value of values) {
-                    let foundGroup = false;
+                // First pass: coarse sampling to get approximate frame boundaries
+                findFramesAtResolution(startTime, endTime, initialSampleCount, (coarseFrames) => {
+                    if (coarseFrames.length <= 1) {
+                        // Try again with higher resolution if we found too few frames
+                        findFramesAtResolution(startTime, endTime, 60, callback);
+                        return;
+                    }
                     
-                    // Try to find an existing group
-                    for (const group of groups) {
-                        if (Math.abs(group.value - value) <= tolerance) {
-                            group.count++;
-                            group.sum += value;
-                            foundGroup = true;
-                            break;
+                    // Get approximate frame interval from coarse sampling
+                    let totalInterval = 0;
+                    for (let i = 1; i < coarseFrames.length; i++) {
+                        totalInterval += coarseFrames[i] - coarseFrames[i-1];
+                    }
+                    const avgInterval = totalInterval / (coarseFrames.length - 1);
+                    const estFrameRate = 1 / avgInterval;
+                    
+                    // Second pass: targeted sampling around estimated frame times
+                    // This dramatically reduces the number of samples needed
+                    const refinedSamples = refineSampling(startTime, endTime, estFrameRate);
+                    findFramesAtTargetedTimes(refinedSamples, (refinedFrames) => {
+                        callback(refinedFrames.length);
+                    });
+                });
+            }
+            
+            function refineSampling(startTime, endTime, estFPS) {
+                // Generate samples around expected frame boundaries
+                // This is much more efficient than uniform sampling
+                const samples = [];
+                const estInterval = 1 / estFPS;
+                
+                // Calculate expected frame boundaries
+                let frameTime = startTime;
+                while (frameTime < endTime) {
+                    // Sample at expected frame time and slightly before/after
+                    // to account for timing inaccuracies
+                    const delta = estInterval / 10; // 10% of interval
+                    samples.push(frameTime - delta);
+                    samples.push(frameTime);
+                    samples.push(frameTime + delta);
+                    
+                    frameTime += estInterval;
+                }
+                
+                return samples.filter(t => t >= startTime && t <= endTime);
+            }
+            
+            function findFramesAtResolution(startTime, endTime, sampleCount, callback) {
+                const interval = (endTime - startTime) / sampleCount;
+                const sampleTimes = [];
+                
+                for (let i = 0; i <= sampleCount; i++) {
+                    sampleTimes.push(startTime + (i * interval));
+                }
+                
+                findFramesAtTargetedTimes(sampleTimes, callback);
+            }
+            
+            function findFramesAtTargetedTimes(times, callback) {
+                let lastHash = null;
+                const frameTimes = [];
+                let timeIndex = 0;
+                
+                processNextTime();
+                
+                function processNextTime() {
+                    if (timeIndex >= times.length) {
+                        callback(frameTimes);
+                        return;
+                    }
+                    
+                    video.currentTime = times[timeIndex];
+                    
+                    video.onseeked = function() {
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const hash = computePerceptualHash(ctx);
+                        
+                        if (lastHash === null || !areHashesSimilar(hash, lastHash)) {
+                            frameTimes.push(video.currentTime);
+                            lastHash = hash;
                         }
+                        
+                        timeIndex++;
+                        processNextTime();
+                    };
+                }
+            }
+            
+            function computePerceptualHash(ctx) {
+                // dHash algorithm - much more robust than pixel sampling
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                const grayValues = [];
+                
+                // Convert to grayscale
+                for (let i = 0; i < imgData.length; i += 4) {
+                    const gray = Math.round(0.299 * imgData[i] + 0.587 * imgData[i+1] + 0.114 * imgData[i+2]);
+                    grayValues.push(gray);
+                }
+                
+                // Downsample to 8x8 for hash calculation
+                const downsample = [];
+                const blockSize = canvas.width / 8;
+                
+                for (let y = 0; y < 8; y++) {
+                    for (let x = 0; x < 8; x++) {
+                        let sum = 0, count = 0;
+                        for (let dy = 0; dy < blockSize; dy++) {
+                            for (let dx = 0; dx < blockSize; dx++) {
+                                const idx = ((y * blockSize + dy) * canvas.width + (x * blockSize + dx));
+                                if (idx < grayValues.length) {
+                                    sum += grayValues[idx];
+                                    count++;
+                                }
+                            }
+                        }
+                        downsample.push(Math.round(sum / count));
+                    }
+                }
+                
+                // Compute dHash: compare adjacent pixels
+                const hash = [];
+                for (let y = 0; y < 8; y++) {
+                    for (let x = 0; x < 7; x++) {
+                        const idx = y * 8 + x;
+                        hash.push(downsample[idx] > downsample[idx + 1] ? 1 : 0);
+                    }
+                }
+                
+                return hash;
+            }
+            
+            function areHashesSimilar(hash1, hash2) {
+                // Count bit differences (Hamming distance)
+                let diffCount = 0;
+                for (let i = 0; i < hash1.length; i++) {
+                    if (hash1[i] !== hash2[i]) {
+                        diffCount++;
+                    }
+                }
+                // Threshold for similarity - dHash is very sensitive to frame changes
+                return diffCount < 10;
+            }
+            
+            function calculateFinalResult(frameCountResults) {
+                if (frameCountResults.length === 0) {
+                    displayResults(30, fileName, "Analysis failed. Using default value.");
+                    return;
+                }
+                
+                // Remove outliers (more than 2 standard deviations from mean)
+                const mean = frameCountResults.reduce((sum, val) => sum + val, 0) / frameCountResults.length;
+                const squareDiffs = frameCountResults.map(val => (val - mean) ** 2);
+                const stdDev = Math.sqrt(squareDiffs.reduce((sum, val) => sum + val, 0) / frameCountResults.length);
+                
+                const validResults = frameCountResults.filter(val => Math.abs(val - mean) <= 2 * stdDev);
+                const avgFPS = validResults.reduce((sum, val) => sum + val, 0) / validResults.length;
+                
+                // Match to standard frame rates
+                const matchedFPS = findNearestStandardFPS(avgFPS);
+                
+                // Generate detailed analysis text
+                const details = `
+                    Analyzed ${frameCountResults.length} segments with binary search method.
+                    Raw calculation: ${avgFPS.toFixed(2)} FPS.
+                    Standard deviation: ${stdDev.toFixed(2)} frames.
+                    Per-segment results: [${frameCountResults.join(', ')}]
+                `;
+                
+                displayResults(matchedFPS, fileName, details);
+                URL.revokeObjectURL(video.src);
+            }
+        }
+        
+        function findNearestStandardFPS(fps) {
+            // Common standard frame rates
+            const standardRates = [
+                23.976, 24, 25, 29.97, 30, 
+                48, 50, 59.94, 60, 
+                120, 144, 240
+            ];
+            
+            // If we're within 1% of a standard rate, use that rate
+            for (const rate of standardRates) {
+                const percentDiff = Math.abs(fps - rate) / rate;
+                if (percentDiff < 0.01) {
+                    return rate;
+                }
+            }
+            
+            // Check for common rational multiples/divisors of standard rates
+            // (like 15fps which is 1/2 of 30fps, or 120fps which is 2x 60fps)
+            const commonMultipleDivisors = [2, 3, 4];
+            
+            for (const rate of standardRates) {
+                for (const factor of commonMultipleDivisors) {
+                    // Check if it's a divisor (e.g., 15fps from 30fps)
+                    const divisor = rate / factor;
+                    const percentDiffDivisor = Math.abs(fps - divisor) / divisor;
+                    if (percentDiffDivisor < 0.03) {
+                        return Math.round(divisor * 1000) / 1000;
                     }
                     
-                    // Create new group if needed
-                    if (!foundGroup) {
-                        groups.push({
-                            value: value,
-                            count: 1,
-                            sum: value
-                        });
+                    // Check if it's a multiple (e.g., 120fps from 60fps)
+                    const multiple = rate * factor;
+                    const percentDiffMultiple = Math.abs(fps - multiple) / multiple;
+                    if (percentDiffMultiple < 0.03) {
+                        return Math.round(multiple * 1000) / 1000;
                     }
                 }
-                
-                // Recalculate average values for each group
-                for (const group of groups) {
-                    group.value = group.sum / group.count;
-                }
-                
-                return groups;
             }
-
-            function findNearestStandardFPS(fps) {
-                // Common standard frame rates
-                const standardRates = [
-                    23.976, 24, 25, 29.97, 30, 
-                    48, 50, 59.94, 60, 
-                    90, 100, 120, 144, 240
-                ];
-                
-                // If we're within 5% of a standard rate, use that rate
-                for (const rate of standardRates) {
-                    const percentDiff = Math.abs(fps - rate) / rate;
-                    if (percentDiff < 0.05) {
-                        return rate;
-                    }
-                }
-                
-                // Otherwise round to 2 decimal places
-                return Math.round(fps * 100) / 100;
-            }
-
-            function displayResults(fps, fileName, details) {
-                // Hide progress, show results
-                progressDiv.classList.add('hidden');
-                resultDiv.classList.remove('hidden');
-                
-                // Update FPS display
-                fpsValue.textContent = fps;
-                
-                // Show analysis details
-                analysisDetails.innerHTML = `
-                    <p>File analyzed: ${fileName}</p>
-                    <p>${details}</p>
-                    <p class="note">Note: Results based on precise measurement of frame intervals.</p>
-                `;
-            }
-
-            function showError(message) {
-                progressDiv.classList.add('hidden');
-                errorDiv.classList.remove('hidden');
-                errorMessage.textContent = message;
-            }
-        });
+            
+            // Otherwise round to 3 decimal places
+            return Math.round(fps * 1000) / 1000;
+        }
+        
+        function showError(message) {
+            errorDiv.classList.remove('hidden');
+            errorText.textContent = message;
+            progressDiv.classList.add('hidden');
+        }
+        
+        function displayResults(fps, fileName, details) {
+            // Hide progress, show results
+            progressDiv.classList.add('hidden');
+            resultDiv.classList.remove('hidden');
+            
+            // Display the FPS
+            fpsValue.textContent = fps;
+            
+            // Display analysis details
+            analysisDetails.innerHTML = `
+                <p>File analyzed: ${fileName}</p>
+                <p>${details}</p>
+                <p class="note">Note: Results are based on advanced binary search and perceptual hashing techniques.</p>
+            `;
+        }
     </script>
 </body>
 </html>
