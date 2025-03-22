@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fast Video FPS Detector</title>
+    <title>Ultra-Fast FPS Detector</title>
     <style>
         * {
             box-sizing: border-box;
@@ -136,7 +136,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Fast Video FPS Detector</h1>
+        <h1>Ultra-Fast FPS Detector</h1>
         <div class="instructions">
             <p>Drag and drop a video file below to detect its true frame rate (FPS).</p>
             <p>Analysis is performed entirely in your browser - no data is uploaded.</p>
@@ -222,238 +222,214 @@
                     return;
                 }
 
-                // Create video element for analysis
-                const video = document.createElement('video');
-                video.preload = 'metadata';
-                const videoUrl = URL.createObjectURL(file);
-                video.src = videoUrl;
-
                 // Show progress indicator
                 progressDiv.classList.remove('hidden');
                 progressPercent.textContent = '0';
                 progressFill.style.width = '0%';
 
-                // Once metadata is loaded, start analysis
-                video.onloadedmetadata = function() {
-                    detectFrameRate(video, file.name);
-                };
+                // Create a URL for the video file
+                const videoUrl = URL.createObjectURL(file);
+                
+                // Use high-speed frame detection approach
+                detectFPSFast(videoUrl, file.name);
+            }
 
+            function detectFPSFast(videoUrl, fileName) {
+                const video = document.createElement('video');
+                video.preload = 'auto';
+                video.muted = true;
+                video.src = videoUrl;
+                
+                // Create a tiny canvas for frame comparison
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                canvas.width = 8;  // Extremely small for ultra-fast processing
+                canvas.height = 8;
+                
+                // Variables to track frames
+                const frameTimestamps = [];
+                let lastFrameHash = null;
+                let isAnalyzing = true;
+                let startTime;
+                
+                // Load video metadata
+                video.onloadedmetadata = function() {
+                    // Determine how many samples to take
+                    // Use just 25-30 samples total regardless of duration
+                    const numSamples = Math.min(30, Math.max(25, Math.ceil(video.duration)));
+                    
+                    // Define the sample points (times to check for frames)
+                    const samplePoints = [];
+                    for (let i = 0; i < numSamples; i++) {
+                        // Distribute samples evenly throughout the video
+                        samplePoints.push(i * (video.duration / numSamples));
+                    }
+                    
+                    // Start the analysis
+                    analyzeVideoFrames(samplePoints, 0);
+                };
+                
                 video.onerror = function() {
                     URL.revokeObjectURL(videoUrl);
                     showError('Error loading video. The format may not be supported by your browser.');
                 };
-            }
-
-            function detectFrameRate(video, fileName) {
-                // Create canvas for frame analysis
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
                 
-                // Set canvas to a very small size for faster processing
-                canvas.width = 32;
-                canvas.height = 32;
-                
-                // Variables for analysis
-                const duration = video.duration;
-                
-                // Select short segments throughout the video for analysis
-                // We'll analyze just 3 segments to keep it fast
-                const segments = [];
-                
-                // Create 3 segments (beginning, middle, end)
-                if (duration < 1) {
-                    showError('Video is too short to analyze accurately.');
-                    URL.revokeObjectURL(video.src);
-                    return;
-                } else if (duration <= 3) {
-                    // For short videos, analyze the whole thing in 1 second chunks
-                    for (let i = 0; i < Math.floor(duration); i++) {
-                        segments.push({
-                            start: i,
-                            duration: Math.min(1, duration - i)
-                        });
-                    }
-                } else {
-                    // For longer videos, sample from beginning, middle, and end
-                    segments.push({ start: 0, duration: 1 });                          // Beginning
-                    segments.push({ start: Math.floor(duration / 2), duration: 1 });   // Middle
-                    segments.push({ start: Math.max(0, Math.floor(duration - 1)), duration: 1 }); // End
-                }
-                
-                // Analysis results
-                const frameIntervals = [];
-                let currentSegment = 0;
-                
-                // Start analyzing the first segment
-                analyzeSegment(currentSegment);
-                
-                function analyzeSegment(segmentIndex) {
-                    if (segmentIndex >= segments.length) {
-                        // All segments analyzed, calculate results
-                        calculateFinalFPS(frameIntervals, fileName);
+                function analyzeVideoFrames(samplePoints, currentIndex) {
+                    if (currentIndex >= samplePoints.length || !isAnalyzing) {
+                        // Analysis complete or cancelled
+                        finishAnalysis();
                         return;
                     }
                     
                     // Update progress
-                    const progress = Math.round((segmentIndex / segments.length) * 100);
+                    const progress = Math.round((currentIndex / samplePoints.length) * 100);
                     progressPercent.textContent = progress;
                     progressFill.style.width = `${progress}%`;
                     
-                    const segment = segments[segmentIndex];
-                    const segmentStart = segment.start;
+                    // Set video to the current sample point
+                    video.currentTime = samplePoints[currentIndex];
                     
-                    // We'll use the progressive refinement method:
-                    // 1. Sample at 240fps (every ~4.17ms) to catch all potential frames
-                    // 2. Look for frame changes to identify the actual frames
-                    const sampleRate = 240; // Samples per second
-                    const totalSamples = Math.floor(segment.duration * sampleRate);
-                    const timeStep = 1 / sampleRate;
-                    
-                    const frames = [];
-                    let lastFrameHash = null;
-                    let sampleIndex = 0;
-                    
-                    // Set initial position
-                    video.currentTime = segmentStart;
-                    
-                    function processSample() {
-                        if (sampleIndex >= totalSamples) {
-                            // Segment analysis complete
-                            if (frames.length >= 2) {
-                                // Calculate intervals between detected frames
-                                for (let i = 1; i < frames.length; i++) {
-                                    const interval = frames[i] - frames[i-1];
-                                    if (interval > 0) { // Only add valid intervals
-                                        frameIntervals.push(interval);
-                                    }
-                                }
-                            }
-                            
-                            // Move to next segment
-                            analyzeSegment(segmentIndex + 1);
-                            return;
-                        }
-                        
-                        // Update current time with high precision
-                        const currentTime = segmentStart + (sampleIndex * timeStep);
-                        video.currentTime = currentTime;
-                        sampleIndex++;
-                    }
-                    
-                    // When the video seeks to the new position
+                    // Once the video has seeked to the requested time
                     video.onseeked = function() {
-                        // Draw current frame to canvas (tiny size for performance)
+                        // Capture the frame
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
-                        // Get a compact representation of the frame
-                        const frameHash = getFrameSignature(ctx);
+                        // Get a simplified hash of the frame
+                        const frameHash = getSimpleFrameHash(ctx);
                         
-                        // If this is a new frame, record its time
-                        if (lastFrameHash === null || isNewFrame(frameHash, lastFrameHash)) {
-                            frames.push(video.currentTime);
+                        // Compare with the last frame
+                        if (lastFrameHash === null || !isSameFrame(frameHash, lastFrameHash)) {
+                            // This is a new frame - record its timestamp
+                            frameTimestamps.push(video.currentTime);
                             lastFrameHash = frameHash;
                         }
                         
-                        // Process next sample
-                        processSample();
+                        // Move to the next sample point
+                        analyzeVideoFrames(samplePoints, currentIndex + 1);
                     };
-                    
-                    // Start sampling
-                    processSample();
                 }
                 
-                // Get a compact signature of the current frame
-                function getFrameSignature(ctx) {
-                    // Get image data (already downscaled to 32x32)
+                function getSimpleFrameHash(ctx) {
+                    // Get image data from the tiny canvas
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
                     
-                    // Extract 16 points scattered throughout the image
-                    // This is much faster than processing all pixels
-                    const signature = [];
-                    const step = Math.floor(imageData.length / 64); // 16 points × 4 channels
+                    // Super simple hash: take 9 points (center and corners)
+                    const points = [
+                        0, // Top-left
+                        4, // Top-right 
+                        canvas.width * 4 * (canvas.height - 1), // Bottom-left
+                        canvas.width * 4 * canvas.height - 4, // Bottom-right
+                        Math.floor(canvas.width * 4 * canvas.height / 2) // Center
+                    ];
                     
-                    for (let i = 0; i < imageData.length; i += step) {
-                        signature.push(imageData[i], imageData[i+1], imageData[i+2]);
+                    // Extract RGB values at these points
+                    const hash = [];
+                    for (const point of points) {
+                        hash.push(
+                            imageData[point], 
+                            imageData[point + 1], 
+                            imageData[point + 2]
+                        );
                     }
                     
-                    return signature;
+                    return hash;
                 }
                 
-                // Check if a frame is different from the previous one
-                function isNewFrame(current, previous) {
-                    // Calculate the sum of absolute differences
-                    let totalDiff = 0;
-                    for (let i = 0; i < current.length; i++) {
-                        totalDiff += Math.abs(current[i] - previous[i]);
+                function isSameFrame(hash1, hash2) {
+                    // Check if hashes are similar enough to consider the same frame
+                    // We use a very low threshold since we're only comparing 5 points
+                    const threshold = 10;
+                    
+                    for (let i = 0; i < hash1.length; i++) {
+                        if (Math.abs(hash1[i] - hash2[i]) > threshold) {
+                            return false;
+                        }
                     }
                     
-                    // Normalize by array length for consistent threshold
-                    const avgDiff = totalDiff / current.length;
-                    
-                    // Higher threshold = less sensitive (fewer frames detected)
-                    // Lower threshold = more sensitive (more frames detected)
-                    return avgDiff > 5; // Threshold determined by testing
+                    return true;
                 }
                 
-                // Calculate final FPS from the frame intervals
-                function calculateFinalFPS(intervals, fileName) {
-                    if (intervals.length < 3) {
-                        URL.revokeObjectURL(video.src);
-                        showError('Not enough frame changes detected for accurate FPS measurement.');
+                function finishAnalysis() {
+                    isAnalyzing = false;
+                    
+                    // If we don't have enough frames, show an error
+                    if (frameTimestamps.length < 5) {
+                        URL.revokeObjectURL(videoUrl);
+                        showError('Not enough distinct frames detected for accurate analysis.');
                         return;
                     }
                     
-                    // Filter out outliers
-                    intervals.sort((a, b) => a - b);
-                    const q1Index = Math.floor(intervals.length * 0.25);
-                    const q3Index = Math.floor(intervals.length * 0.75);
-                    const iqr = intervals[q3Index] - intervals[q1Index];
-                    const lowerBound = intervals[q1Index] - 1.5 * iqr;
-                    const upperBound = intervals[q3Index] + 1.5 * iqr;
-                    
-                    const filteredIntervals = intervals.filter(
-                        interval => interval >= lowerBound && interval <= upperBound
-                    );
-                    
-                    if (filteredIntervals.length < 3) {
-                        filteredIntervals = intervals; // Fallback if filtering removes too many
+                    // Calculate intervals between frames
+                    const intervals = [];
+                    for (let i = 1; i < frameTimestamps.length; i++) {
+                        intervals.push(frameTimestamps[i] - frameTimestamps[i-1]);
                     }
                     
-                    // Calculate average interval
-                    const sum = filteredIntervals.reduce((a, b) => a + b, 0);
-                    const avgInterval = sum / filteredIntervals.length;
+                    // Find the most common interval (pattern)
+                    const intervalGroups = groupSimilarValues(intervals, 0.001); // 1ms tolerance
                     
-                    // Convert to FPS
-                    const rawFps = 1 / avgInterval;
+                    if (intervalGroups.length === 0) {
+                        URL.revokeObjectURL(videoUrl);
+                        showError('Could not determine a consistent frame pattern.');
+                        return;
+                    }
+                    
+                    // Sort by frequency (most common first)
+                    intervalGroups.sort((a, b) => b.count - a.count);
+                    
+                    // Calculate FPS from the most common interval
+                    const dominantInterval = intervalGroups[0].value;
+                    const rawFps = 1 / dominantInterval;
                     
                     // Find nearest standard frame rate
                     const fps = findNearestStandardFPS(rawFps);
                     
-                    // Show deviation for reliability assessment
-                    const stdDev = calculateStandardDeviation(filteredIntervals);
-                    const coefficientOfVariation = (stdDev / avgInterval) * 100;
-                    const reliability = coefficientOfVariation < 5 ? "High" : 
-                                      coefficientOfVariation < 15 ? "Medium" : "Low";
+                    // Calculate confidence
+                    const confidence = (intervalGroups[0].count / intervals.length) * 100;
                     
                     // Display results
                     displayResults(fps, fileName, 
                         `Raw calculation: ${rawFps.toFixed(2)} FPS.<br>` +
-                        `Analyzed ${filteredIntervals.length} frame intervals.<br>` +
-                        `Reliability: ${reliability} (${coefficientOfVariation.toFixed(1)}% variation)`);
+                        `Analyzed ${frameTimestamps.length} frames.<br>` +
+                        `Confidence: ${confidence.toFixed(1)}%`);
                     
                     // Clean up
-                    URL.revokeObjectURL(video.src);
+                    URL.revokeObjectURL(videoUrl);
+                }
+            }
+            
+            function groupSimilarValues(values, tolerance) {
+                const groups = [];
+                
+                for (const value of values) {
+                    let foundGroup = false;
+                    
+                    // Try to find an existing group
+                    for (const group of groups) {
+                        if (Math.abs(group.value - value) <= tolerance) {
+                            group.count++;
+                            group.sum += value;
+                            foundGroup = true;
+                            break;
+                        }
+                    }
+                    
+                    // Create new group if needed
+                    if (!foundGroup) {
+                        groups.push({
+                            value: value,
+                            count: 1,
+                            sum: value
+                        });
+                    }
                 }
                 
-                function calculateStandardDeviation(values) {
-                    const avg = values.reduce((a, b) => a + b, 0) / values.length;
-                    const squareDiffs = values.map(value => {
-                        const diff = value - avg;
-                        return diff * diff;
-                    });
-                    const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / squareDiffs.length;
-                    return Math.sqrt(avgSquareDiff);
+                // Recalculate average values for each group
+                for (const group of groups) {
+                    group.value = group.sum / group.count;
                 }
+                
+                return groups;
             }
 
             function findNearestStandardFPS(fps) {
@@ -488,7 +464,7 @@
                 analysisDetails.innerHTML = `
                     <p>File analyzed: ${fileName}</p>
                     <p>${details}</p>
-                    <p class="note">Note: Results are based on analyzing frame changes in short video segments.</p>
+                    <p class="note">Note: Results are based on analyzing frame changes throughout the video.</p>
                 `;
             }
 
