@@ -1,10 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>True Video FPS Detector</title>
      <style>
+         /* Dark and Light Mode Variables */
+         :root {
+             /* Default mode is light */
+             --bg-primary: #f8f9fa;
+             --bg-secondary: #ffffff;
+             --bg-tertiary: #f1f5f9;
+             --bg-accent: #eef2ff;
+             
+             --text-primary: #1a202c;
+             --text-secondary: #4a5568;
+             --text-tertiary: #718096;
+             
+             --border-color: #e2e8f0;
+             --divider-color: #edf2f7;
+             
+             --primary-color: #3a7bc8;
+             --primary-hover: #2b6cb0;
+             --primary-light: #ebf4ff;
+             --primary-dark: #2c5282;
+             
+             --success-color: #48bb78;
+             --success-light: #f0fff4;
+             --success-dark: #276749;
+             
+             --danger-color: #e53e3e;
+             --danger-light: #fff5f5;
+             --danger-dark: #c53030;
+             
+             --warning-color: #ed8936;
+             --warning-light: #fffaf0;
+             --warning-dark: #c05621;
+             
+             --info-color: #4299e1;
+             --info-light: #ebf8ff;
+             
+             --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+             --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+             --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+             
+             --radius-sm: 4px;
+             --radius-md: 8px;
+             --radius-lg: 12px;
+             
+             --transition-speed: 0.3s;
+             --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+             
+             --theme-icon-display: block;
+         }
+         
+         /* Dark Mode Variables */
+         [data-theme="dark"] {
+             --bg-primary: #121620;
+             --bg-secondary: #1e2736;
+             --bg-tertiary: #283141;
+             --bg-accent: #2a3653;
+             
+             --text-primary: #f7fafc;
+             --text-secondary: #e2e8f0;
+             --text-tertiary: #a0aec0;
+             
+             --border-color: #3d4a5c;
+             --divider-color: #4a5568;
+             
+             --primary-color: #4299e1;
+             --primary-hover: #3182ce;
+             --primary-light: #2a4365;
+             --primary-dark: #2c5282;
+             
+             --success-color: #48bb78;
+             --success-light: #1c4532;
+             --success-dark: #48bb78;
+             
+             --danger-color: #f56565;
+             --danger-light: #742a2a;
+             --danger-dark: #f56565;
+             
+             --warning-color: #ed8936;
+             --warning-light: #652b19;
+             --warning-dark: #ed8936;
+             
+             --info-color: #4299e1;
+             --info-light: #2a4365;
+             
+             --shadow-sm: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+             --shadow-md: 0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
+             --shadow-lg: 0 10px 15px rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.2);
+         }
+         
          * {
              box-sizing: border-box;
              margin: 0;
@@ -14,184 +102,873 @@
          body {
              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
              line-height: 1.6;
-             color: #333;
-             background-color: #f7f9fc;
+             color: var(--text-primary);
+             background-color: var(--bg-primary);
              padding: 20px;
+             min-height: 100vh;
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
          }
          
          .container {
-             max-width: 800px;
+             max-width: 1000px;
              margin: 0 auto;
-             background: white;
-             padding: 30px;
-             border-radius: 8px;
-             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+             background: var(--bg-secondary);
+             padding: 32px;
+             border-radius: var(--radius-lg);
+             box-shadow: var(--shadow-md);
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        box-shadow var(--transition-speed) var(--transition-timing);
          }
          
-         h1 {
-             color: #2c3e50;
-             margin-bottom: 20px;
+         /* Header styling: centered title and description with theme toggle in the upper right */
+         .header {
+             position: relative;
              text-align: center;
-             font-weight: 600;
+             margin-bottom: 25px;
+         }
+         
+         .header-titles h1 {
+             color: var(--text-primary);
+             font-weight: 700;
+             font-size: 2.2rem;
+             margin: 0;
+             letter-spacing: -0.02em;
+             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+         }
+         
+         .header .description {
+             font-size: 16px;
+             color: var(--text-secondary);
+             margin-top: 8px;
+         }
+         
+         .theme-switch {
+             display: flex;
+             align-items: center;
+             gap: 12px;
+         }
+         
+         /* Position the theme toggle at the top right of the header */
+         .header .theme-switch {
+             position: absolute;
+             top: 10px;
+             right: 10px;
+         }
+         
+         .theme-switch-label {
+             color: var(--text-secondary);
+             font-size: 14px;
+             font-weight: 500;
+         }
+         
+         .theme-toggle {
+             background-color: var(--bg-tertiary);
+             border-radius: 30px;
+             cursor: pointer;
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+             padding: 4px;
+             position: relative;
+             height: 28px;
+             width: 56px;
+             transition: background-color var(--transition-speed) var(--transition-timing);
+             border: 1px solid var(--border-color);
+             box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+         }
+         
+         .theme-toggle .icon {
+             color: var(--text-primary);
+             width: 18px;
+             height: 18px;
+             z-index: 1;
+             position: relative;
+             transition: transform var(--transition-speed) var(--transition-timing),
+                         opacity var(--transition-speed) var(--transition-timing);
+         }
+         
+         .theme-toggle .icon-sun {
+             margin-left: 4px;
+             opacity: 0.7;
+             transform: translateX(0);
+         }
+         
+         .theme-toggle .icon-moon {
+             margin-right: 4px;
+             opacity: 0.7;
+             transform: translateX(0);
+         }
+         
+         .theme-toggle.active .icon-sun {
+             opacity: 0.5;
+         }
+         
+         .theme-toggle.active .icon-moon {
+             opacity: 1;
+         }
+         
+         .theme-toggle:not(.active) .icon-sun {
+             opacity: 1;
+         }
+         
+         .theme-toggle:not(.active) .icon-moon {
+             opacity: 0.5;
+         }
+         
+         .theme-toggle .icon-sun, 
+         .theme-toggle .icon-moon {
+             fill: var(--text-secondary);
+         }
+         
+         .theme-toggle::after {
+             content: '';
+             border-radius: 50%;
+             position: absolute;
+             left: 4px;
+             top: 3px;
+             width: 20px;
+             height: 20px;
+             background-color: var(--primary-color);
+             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+             transition: transform var(--transition-speed) var(--transition-timing), 
+                         background-color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .theme-toggle.active::after {
+             transform: translateX(28px);
          }
          
          .instructions {
              margin-bottom: 25px;
              text-align: center;
+             background-color: var(--bg-accent);
+             padding: 20px;
+             border-radius: var(--radius-md);
+             transition: background-color var(--transition-speed) var(--transition-timing);
+             border: 1px solid var(--border-color);
+             box-shadow: var(--shadow-sm);
          }
          
          .instructions p {
-             margin-bottom: 10px;
+             margin-bottom: 8px;
              font-size: 16px;
+             color: var(--text-secondary);
+         }
+         
+         .controls {
+             display: flex;
+             flex-wrap: wrap;
+             gap: 18px;
+             justify-content: center;
+             align-items: flex-start;
+             margin-bottom: 25px;
+             padding: 18px;
+             background-color: var(--bg-tertiary);
+             border-radius: var(--radius-md);
+             border: 1px solid var(--border-color);
+             transition: background-color var(--transition-speed) var(--transition-timing);
+             box-shadow: var(--shadow-sm);
+         }
+         
+         .control-group {
+             display: flex;
+             flex-direction: column;
+             gap: 8px;
+             min-width: 180px;
+         }
+         
+         .control-group label {
+             font-size: 14px;
+             color: var(--text-secondary);
+             font-weight: 500;
+         }
+         
+         .btn {
+             padding: 10px 18px;
+             color: white;
+             border: none;
+             border-radius: var(--radius-sm);
+             font-weight: 500;
+             cursor: pointer;
+             transition: all var(--transition-speed) var(--transition-timing);
+             box-shadow: var(--shadow-sm);
+             display: flex;
+             align-items: center;
+             gap: 6px;
+             white-space: nowrap;
+             font-size: 14px;
+         }
+         
+         .btn:hover {
+             box-shadow: var(--shadow-md);
+             transform: translateY(-2px);
+         }
+         
+         .btn:active {
+             transform: translateY(0);
+         }
+         
+         .btn svg {
+             width: 16px;
+             height: 16px;
+             fill: currentColor;
+         }
+         
+         .btn-primary {
+             background-color: var(--primary-color);
+         }
+         
+         .btn-primary:hover {
+             background-color: var(--primary-hover);
+         }
+         
+         .btn-small {
+             padding: 6px 12px;
+             font-size: 13px;
+         }
+         
+         .btn-small svg {
+             width: 14px;
+             height: 14px;
+         }
+         
+         .btn-outline {
+             background-color: transparent;
+             color: var(--primary-color);
+             border: 1px solid var(--primary-color);
+         }
+         
+         .btn-outline:hover {
+             background-color: var(--primary-light);
+         }
+         
+         .btn-danger {
+             background-color: var(--danger-color);
+         }
+         
+         .btn-danger:hover {
+             background-color: var(--danger-dark);
+         }
+         
+         .btn-outline-danger {
+             background-color: transparent;
+             color: var(--danger-color);
+             border: 1px solid var(--danger-color);
+         }
+         
+         .btn-outline-danger:hover {
+             background-color: var(--danger-light);
+         }
+         
+         .btn.disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+             pointer-events: none;
          }
          
          .file-drop {
-             border: 2px dashed #ccc;
-             border-radius: 8px;
+             border: 2px dashed var(--border-color);
+             border-radius: var(--radius-md);
              padding: 40px 20px;
              text-align: center;
              cursor: pointer;
-             transition: border-color 0.3s, background-color 0.3s;
-             margin-bottom: 25px;
+             transition: all var(--transition-speed) var(--transition-timing);
+             margin-bottom: 30px;
+             background-color: var(--bg-tertiary);
+             position: relative;
+             overflow: hidden;
          }
          
          .file-drop:hover, .file-drop.highlight {
-             border-color: #4a90e2;
-             background-color: #f0f7ff;
+             border-color: var(--primary-color);
+             background-color: var(--primary-light);
+             transform: translateY(-3px);
+             box-shadow: var(--shadow-md);
          }
          
          .file-drop p {
-             margin-bottom: 15px;
+             margin-bottom: 20px;
              font-size: 18px;
-             color: #555;
+             color: var(--text-secondary);
          }
          
-         .file-input {
-             display: inline-block;
+         .file-input-btn {
+             display: inline-flex;
+             align-items: center;
+             gap: 8px;
              padding: 12px 24px;
-             background-color: #4a90e2;
+             background-color: var(--primary-color);
              color: white;
-             border-radius: 4px;
+             border-radius: var(--radius-sm);
              font-weight: 500;
              cursor: pointer;
-             transition: background-color 0.3s;
+             transition: all var(--transition-speed) var(--transition-timing);
+             box-shadow: var(--shadow-sm);
          }
          
-         .file-input:hover {
-             background-color: #3a7bc8;
+         .file-input-btn:hover {
+             background-color: var(--primary-hover);
+             transform: translateY(-2px);
+             box-shadow: var(--shadow-md);
+         }
+         
+         .file-input-btn svg {
+             width: 18px;
+             height: 18px;
+             fill: currentColor;
          }
          
          #fileSelector {
              display: none;
          }
          
+         .progress-container {
+             margin-bottom: 30px;
+             animation: fadeIn 0.3s var(--transition-timing);
+         }
+         
+         .progress-header {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 10px;
+         }
+         
+         .progress-label {
+             display: flex;
+             justify-content: space-between;
+             font-size: 14px;
+             color: var(--text-secondary);
+         }
+         
+         .stop-btn {
+             background-color: var(--danger-color);
+             color: white;
+             border: none;
+             border-radius: var(--radius-sm);
+             padding: 5px 10px;
+             font-size: 13px;
+             font-weight: 500;
+             cursor: pointer;
+             display: flex;
+             align-items: center;
+             gap: 5px;
+             transition: all var(--transition-speed) var(--transition-timing);
+         }
+         
+         .stop-btn:hover {
+             background-color: var(--danger-dark);
+             transform: translateY(-1px);
+             box-shadow: var(--shadow-sm);
+         }
+         
+         .stop-btn svg {
+             width: 14px;
+             height: 14px;
+             fill: currentColor;
+         }
+         
          .progress {
-             height: 6px;
-             background-color: #eee;
-             border-radius: 3px;
-             margin-bottom: 25px;
+             height: 8px;
+             background-color: var(--bg-tertiary);
+             border-radius: 4px;
              overflow: hidden;
+             box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+             transition: background-color var(--transition-speed) var(--transition-timing);
          }
          
          .progress-fill {
              height: 100%;
-             background-color: #4caf50;
+             background-color: var(--success-color);
              width: 0%;
-             transition: width 0.3s ease;
+             transition: width var(--transition-speed) var(--transition-timing);
+             border-radius: 4px;
+             background-image: linear-gradient(45deg, 
+                 rgba(255,255,255,0.15) 25%, 
+                 transparent 25%, 
+                 transparent 50%, 
+                 rgba(255,255,255,0.15) 50%, 
+                 rgba(255,255,255,0.15) 75%, 
+                 transparent 75%, 
+                 transparent);
+             background-size: 20px 20px;
+             animation: progress-stripes 1s linear infinite;
          }
          
-         .progress-label {
-             text-align: center;
-             margin-bottom: 10px;
+         @keyframes progress-stripes {
+             from { background-position: 0 0; }
+             to { background-position: 20px 0; }
+         }
+         
+         .current-file {
              font-size: 14px;
-             color: #666;
+             color: var(--text-secondary);
+             margin: 12px 0;
+             text-align: center;
+             background-color: var(--primary-light);
+             padding: 10px 14px;
+             border-radius: var(--radius-sm);
+             animation: fadeIn 0.3s var(--transition-timing);
+             transition: background-color var(--transition-speed) var(--transition-timing);
+             box-shadow: var(--shadow-sm);
          }
          
-         .results {
-             padding: 20px;
-             border: 1px solid #eee;
-             border-radius: 6px;
-             margin-top: 20px;
-             display: none;
+         .results-card {
+             padding: 25px;
+             border: 1px solid var(--border-color);
+             border-radius: var(--radius-md);
+             margin-bottom: 30px;
+             box-shadow: var(--shadow-sm);
+             animation: fadeIn 0.4s var(--transition-timing);
+             background-color: var(--bg-secondary);
+             transition: all var(--transition-speed) var(--transition-timing);
          }
          
-         .results h2 {
-             margin-bottom: 15px;
-             color: #2c3e50;
-             font-weight: 600;
+         .results-card:hover {
+             box-shadow: var(--shadow-md);
+             transform: translateY(-2px);
+         }
+         
+         .results-header {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 20px;
+         }
+         
+         .results-header h2 {
+             margin-bottom: 0;
+         }
+         
+         .fps-result {
+             text-align: center;
+             margin-bottom: 25px;
          }
          
          .fps-value {
-             font-size: 40px;
+             font-size: 3.5rem;
              font-weight: 700;
-             color: #4a90e2;
+             color: var(--primary-color);
              margin: 10px 0;
              text-align: center;
+             line-height: 1.1;
+             transition: color var(--transition-speed) var(--transition-timing);
+             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
          }
          
          .fps-subtitle {
-             font-size: 14px;
-             color: #666;
+             font-size: 16px;
+             color: var(--text-secondary);
              text-align: center;
-             margin-bottom: 20px;
+             transition: color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .warning-message {
+             margin-top: 10px;
+             padding: 12px 16px;
+             background-color: var(--warning-light);
+             color: var(--warning-dark);
+             border-radius: var(--radius-sm);
+             font-size: 14px;
+             display: flex;
+             align-items: center;
+             gap: 8px;
+             animation: fadeIn 0.4s var(--transition-timing);
+             box-shadow: var(--shadow-sm);
+             border-left: 3px solid var(--warning-color);
+         }
+         
+         .warning-message svg {
+             flex-shrink: 0;
+             width: 18px;
+             height: 18px;
+             fill: currentColor;
          }
          
          .analysis-details {
              margin-top: 20px;
              font-size: 14px;
-             color: #666;
-             line-height: 1.5;
+             color: var(--text-secondary);
+             line-height: 1.6;
+             background-color: var(--bg-tertiary);
+             padding: 15px;
+             border-radius: var(--radius-sm);
+             border-left: 3px solid var(--primary-color);
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
+             box-shadow: var(--shadow-sm);
+         }
+         
+         .analysis-details p {
+             margin-bottom: 8px;
          }
          
          .error {
-             color: #e74c3c;
+             color: white;
              text-align: center;
-             margin-bottom: 15px;
+             margin-bottom: 20px;
              font-weight: 500;
-             display: none;
+             padding: 12px;
+             border-radius: var(--radius-sm);
+             background-color: var(--danger-color);
+             animation: fadeIn 0.3s var(--transition-timing);
+             box-shadow: var(--shadow-sm);
          }
          
          .note {
              font-style: italic;
-             color: #777;
+             color: var(--text-tertiary);
              font-size: 13px;
+             margin-top: 15px;
+         }
+         
+         .metadata {
              margin-top: 10px;
+             font-size: 13px;
+             color: var(--text-tertiary);
+             font-style: italic;
          }
          
          .hidden {
-             display: none;
+             display: none !important;
+         }
+         
+         .control-select {
+             width: 100%;
+             padding: 10px 12px;
+             border-radius: var(--radius-sm);
+             border: 1px solid var(--border-color);
+             font-size: 14px;
+             background-color: var(--bg-secondary);
+             color: var(--text-primary);
+             appearance: none;
+             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+             background-repeat: no-repeat;
+             background-position: right 10px center;
+             background-size: 16px;
+             padding-right: 32px;
+             cursor: pointer;
+             transition: all var(--transition-speed) var(--transition-timing);
+             box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+         }
+         
+         .control-select:hover {
+             border-color: var(--primary-color);
+         }
+         
+         .control-select:focus {
+             outline: none;
+             border-color: var(--primary-color);
+             box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+         }
+         
+         .results-table-wrapper {
+             overflow-x: auto;
+             margin-top: 20px;
+             background-color: var(--bg-secondary);
+             border-radius: var(--radius-md);
+             box-shadow: var(--shadow-sm);
+             transition: background-color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .results-table {
+             width: 100%;
+             border-collapse: separate;
+             border-spacing: 0;
+             overflow: hidden;
+         }
+         
+         .results-table th, .results-table td {
+             padding: 12px 16px;
+             text-align: left;
+             border-bottom: 1px solid var(--border-color);
+             transition: background-color var(--transition-speed) var(--transition-timing),
+                        border-color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .results-table th {
+             background-color: var(--bg-tertiary);
+             color: var(--text-primary);
+             font-weight: 600;
+             font-size: 14px;
+         }
+         
+         .results-table tr:last-child td {
+             border-bottom: none;
+         }
+         
+         .results-table tbody tr {
+             transition: all var(--transition-speed) var(--transition-timing);
+             cursor: pointer;
+         }
+         
+         .results-table tbody tr:hover {
+             background-color: var(--bg-accent);
+             transform: translateY(-2px);
+             box-shadow: var(--shadow-sm);
+         }
+         
+         .results-table tbody tr.active {
+             background-color: var(--primary-light);
+             border-left: 3px solid var(--primary-color);
+         }
+         
+         .results-table .actions {
+             text-align: right;
+             white-space: nowrap;
+         }
+         
+         .bulk-results {
+             margin-top: 40px;
+             animation: fadeIn 0.4s var(--transition-timing);
+         }
+         
+         .badge {
+             display: inline-block;
+             padding: 4px 10px;
+             border-radius: 50px;
+             font-size: 12px;
+             font-weight: 600;
+             text-align: center;
+             box-shadow: var(--shadow-sm);
+             letter-spacing: 0.02em;
+         }
+         
+         .badge-variable {
+             background-color: var(--danger-light);
+             color: var(--danger-dark);
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .badge-constant {
+             background-color: var(--success-light);
+             color: var(--success-dark);
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .badge-accuracy {
+             background-color: var(--info-light);
+             color: var(--info-color);
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
+         }
+         
+         .status-message {
+             text-align: center;
+             color: var(--text-secondary);
+             font-size: 14px;
+             margin: 20px 0;
+             padding: 12px;
+             background-color: var(--bg-tertiary);
+             border-radius: var(--radius-sm);
+             animation: fadeIn 0.3s var(--transition-timing);
+             transition: background-color var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
+             box-shadow: var(--shadow-sm);
+         }
+         
+         .empty-state {
+             text-align: center;
+             padding: 30px;
+             color: var(--text-tertiary);
+         }
+         
+         .empty-state svg {
+             width: 64px;
+             height: 64px;
+             margin-bottom: 20px;
+             opacity: 0.6;
+         }
+         
+         .empty-state p {
+             font-size: 16px;
+             margin-bottom: 10px;
+         }
+         
+         @keyframes fadeIn {
+             from { opacity: 0; transform: translateY(10px); }
+             to { opacity: 1; transform: translateY(0); }
+         }
+         
+         @keyframes pulse {
+             0% { opacity: 1; }
+             50% { opacity: 0.6; }
+             100% { opacity: 1; }
+         }
+         
+         .pulse {
+             animation: pulse 2s infinite ease-in-out;
+         }
+         
+         @media (max-width: 768px) {
+             .container {
+                 padding: 20px 16px;
+             }
+             
+             .header {
+                 margin-bottom: 20px;
+             }
+             
+             .file-drop {
+                 padding: 30px 15px;
+             }
+             
+             .controls {
+                 flex-direction: column;
+                 align-items: stretch;
+             }
+             
+             .control-group {
+                 width: 100%;
+             }
+             
+             .fps-value {
+                 font-size: 2.8rem;
+             }
+             
+             .results-table th, .results-table td {
+                 padding: 8px 12px;
+                 font-size: 13px;
+             }
+             
+             .btn {
+                 font-size: 13px;
+                 padding: 8px 14px;
+             }
+             
+             .btn-small {
+                 padding: 5px 10px;
+                 font-size: 12px;
+             }
          }
      </style>
 </head>
 <body>
     <div class="container">
-        <h1>Video Frame Rate Detector</h1>
-        <div class="instructions">
-            <p>Drag and drop a video file below to detect its true frame rate (FPS).</p>
-            <p>Analysis is performed entirely in your browser - no data is uploaded.</p>
+        <div class="header">
+            <div class="header-titles">
+                <h1>Video Frame Rate Detector</h1>
+                <p class="description">This tool calculates a video's original and true FPS, as the metadata's FPS may be inaccurate due to exporting at a higher FPS, resulting in duplicate frames. It identifies the video's authentic FPS.</p>
+            </div>
+            <div class="theme-switch">
+                <span class="theme-switch-label" id="themeLabel">Dark Mode</span>
+                <div id="themeToggle" class="theme-toggle active">
+                    <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+                    </svg>
+                    <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12.2 21a9 9 0 1 1 8.8-9 9 9 0 0 0-8.8 9z"/>
+                    </svg>
+                </div>
+            </div>
         </div>
         
-        <div class="error" id="errorMessage"></div>
+        <div class="instructions">
+            <p>Drop video files below to detect their true frame rate (FPS).</p>
+            <p>Analysis is performed entirely in your browser - no files are uploaded to any server.</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="accuracy">Analysis Accuracy:</label>
+                <select id="accuracy" class="control-select">
+                    <option value="low">Low (half a second)</option>
+                    <option value="medium" selected>Medium (1 second)</option>
+                    <option value="high">High (3 seconds)</option>
+                    <option value="extreme">Extreme (8 seconds)</option>
+                    <option value="placebo">Placebo (Full Video)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="tolerance">Detection Tolerance:</label>
+                <select id="tolerance" class="control-select">
+                    <option value="standard" selected>Standard</option>
+                    <option value="high">High</option>
+                    <option value="veryHigh">Very High</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="error hidden" id="errorMessage"></div>
         
         <div class="file-drop" id="dropZone">
-            <p>Drop video file here</p>
-            <div class="file-input">Select video file</div>
-            <input type="file" id="fileSelector" accept="video/*">
+            <p>Drop video files here (multiple files supported)</p>
+            <div class="file-input-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                </svg>
+                Select video files
+            </div>
+            <input type="file" id="fileSelector" accept="video/*" multiple>
         </div>
         
+        <div class="current-file hidden" id="currentFile"></div>
+        
         <div class="progress-container hidden" id="progressContainer">
-            <div class="progress-label">Analyzing: <span id="progressPercent">0</span>%</div>
+            <div class="progress-header">
+                <div class="progress-label">
+                    <span>Analyzing video...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <button id="stopAnalysisBtn" class="stop-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M6 6h12v12H6z"/>
+                    </svg>
+                    Stop
+                </button>
+            </div>
             <div class="progress">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
         
-        <div class="results" id="resultsContainer">
-            <h2>Results:</h2>
-            <div class="fps-value" id="fpsValue">--</div>
-            <div class="fps-subtitle" id="fpsSubtitle"></div>
+        <div class="results-card hidden" id="resultsContainer">
+            <div class="results-header">
+                <h2>Result</h2>
+                <button id="singleRecalculateBtn" class="btn btn-primary btn-small">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Recalculate
+                </button>
+            </div>
+            <div class="fps-result">
+                <div class="fps-value" id="fpsValue">--</div>
+                <div class="fps-subtitle" id="fpsSubtitle"></div>
+                <div class="warning-message hidden" id="warningMessage">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span id="warningText">Higher Analysis Accuracy Recommended</span>
+                </div>
+            </div>
             <div class="analysis-details" id="analysisDetails"></div>
         </div>
+        
+        <div class="bulk-results hidden" id="bulkResultsContainer">
+            <h2>All Results</h2>
+            <div class="results-table-wrapper">
+                <table class="results-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>FPS</th>
+                            <th>Type</th>
+                            <th>Accuracy</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="status-message hidden" id="statusMessage"></div>
     </div>
     
     <script>
@@ -205,10 +982,87 @@
             const resultsContainer = document.getElementById('resultsContainer');
             const fpsValue = document.getElementById('fpsValue');
             const fpsSubtitle = document.getElementById('fpsSubtitle');
+            const warningMessage = document.getElementById('warningMessage');
+            const warningText = document.getElementById('warningText');
             const analysisDetails = document.getElementById('analysisDetails');
             const errorMessage = document.getElementById('errorMessage');
+            const accuracySelector = document.getElementById('accuracy');
+            const toleranceSelector = document.getElementById('tolerance');
+            const currentFile = document.getElementById('currentFile');
+            const bulkResultsContainer = document.getElementById('bulkResultsContainer');
+            const resultsTableBody = document.getElementById('resultsTableBody');
+            const singleRecalculateBtn = document.getElementById('singleRecalculateBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLabel = document.getElementById('themeLabel');
+            const stopAnalysisBtn = document.getElementById('stopAnalysisBtn');
             
-            // Event listeners for drag and drop
+            // Theme management
+            const html = document.documentElement;
+            
+            // Check for saved theme preference or use default with localStorage fallback
+            let currentTheme = 'dark'; // Default theme
+            
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    currentTheme = savedTheme;
+                }
+            } catch (e) {
+                // localStorage not available, use default
+                console.log('localStorage not available, using default theme');
+            }
+            
+            // Apply the initial theme
+            html.setAttribute('data-theme', currentTheme);
+            themeToggle.classList.toggle('active', currentTheme === 'dark');
+            themeLabel.textContent = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+            
+            // Theme toggle event
+            themeToggle.addEventListener('click', function() {
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                currentTheme = newTheme;
+                
+                // Apply theme
+                html.setAttribute('data-theme', newTheme);
+                themeToggle.classList.toggle('active', newTheme === 'dark');
+                themeLabel.textContent = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+                
+                // Try to save preference
+                try {
+                    localStorage.setItem('theme', newTheme);
+                } catch (e) {
+                    // localStorage not available, ignore
+                }
+            });
+            
+            // State for processing
+            let processedFiles = [];
+            let currentProcessingFile = null;
+            let allResults = [];
+            let currentDisplayedResult = null;
+            let isProcessing = false;
+            let shouldStopAnalysis = false;
+            let currentAnalysisTimeouts = [];
+            
+            // Common frame rates for rounding
+            const commonFrameRates = [
+                // Film and broadcast standards
+                23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60,
+                // Computer and gaming standards
+                75, 90, 100, 120, 144, 240
+            ];
+            
+            // Debounce function to prevent multiple rapid executions
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+            
+            // Event listeners for drag and drop with debounce
             dropZone.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 dropZone.classList.add('highlight');
@@ -218,52 +1072,599 @@
                 dropZone.classList.remove('highlight');
             });
             
-            dropZone.addEventListener('drop', function(e) {
+            const handleDrop = debounce(function(e) {
                 e.preventDefault();
                 dropZone.classList.remove('highlight');
                 
                 if (e.dataTransfer.files.length > 0) {
-                    processFile(e.dataTransfer.files[0]);
+                    startProcessingFiles(e.dataTransfer.files);
                 }
-            });
+            }, 200);
+            
+            dropZone.addEventListener('drop', handleDrop);
             
             // Click to select file
             dropZone.addEventListener('click', function() {
-                fileSelector.click();
+                if (!isProcessing) {
+                    fileSelector.click();
+                } else {
+                    showStatusMessage('Please wait until current analysis completes or click Stop', true);
+                }
             });
             
             fileSelector.addEventListener('change', function() {
                 if (fileSelector.files.length > 0) {
-                    processFile(fileSelector.files[0]);
+                    startProcessingFiles(fileSelector.files);
                 }
             });
             
-            // Process the selected video file
-            function processFile(file) {
-                // Reset UI
-                errorMessage.style.display = 'none';
-                resultsContainer.style.display = 'none';
-                fpsSubtitle.textContent = '';
-                
-                // Validate file type
-                if (!file.type.includes('video/')) {
-                    showError('Please select a valid video file.');
+            // Stop analysis button
+            stopAnalysisBtn.addEventListener('click', function() {
+                if (isProcessing) {
+                    shouldStopAnalysis = true;
+                    // Clear any pending timeouts
+                    currentAnalysisTimeouts.forEach(timeout => clearTimeout(timeout));
+                    currentAnalysisTimeouts = [];
+                    
+                    // Show message
+                    showStatusMessage('Analysis stopped by user', true);
+                    
+                    // Hide progress
+                    progressContainer.classList.add('hidden');
+                    currentFile.classList.add('hidden');
+                    
+                    // Reset state
+                    isProcessing = false;
+                }
+            });
+            
+            // Recalculate single file button
+            singleRecalculateBtn.addEventListener('click', function() {
+                if (isProcessing) {
+                    showStatusMessage('Please wait until current analysis completes or click Stop', true);
                     return;
                 }
                 
-                // Show progress indicator
+                if (!currentDisplayedResult) return;
+                
+                // Find the file matching the currently displayed result
+                const fileToRecalculate = processedFiles.find(file => file.name === currentDisplayedResult.fileName);
+                if (fileToRecalculate) {
+                    recalculateFile(fileToRecalculate);
+                }
+            });
+            
+            // Show status message
+            function showStatusMessage(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.classList.remove('hidden');
+                
+                if (isError) {
+                    statusMessage.style.color = 'var(--danger-color)';
+                } else {
+                    statusMessage.style.color = 'var(--text-secondary)';
+                }
+                
+                // Auto-hide after 5 seconds
+                const timeout = setTimeout(() => {
+                    statusMessage.classList.add('hidden');
+                }, 5000);
+                
+                currentAnalysisTimeouts.push(timeout);
+            }
+            
+            // Start processing multiple files
+            function startProcessingFiles(files) {
+                // Don't start new process if already processing
+                if (isProcessing) {
+                    showStatusMessage('Please wait until current analysis completes or click Stop', true);
+                    return;
+                }
+                
+                // Reset UI
+                errorMessage.classList.add('hidden');
+                
+                // Filter and store files
+                const videoFiles = Array.from(files).filter(file => file.type.includes('video/'));
+                
+                if (videoFiles.length === 0) {
+                    showError('Please select valid video files.');
+                    return;
+                }
+                
+                // Store files for later recalculation
+                processedFiles = [...processedFiles, ...videoFiles];
+                
+                // Show bulk results container if we'll have multiple results
+                if (processedFiles.length > 1) {
+                    bulkResultsContainer.classList.remove('hidden');
+                } else {
+                    bulkResultsContainer.classList.add('hidden');
+                }
+                
+                // Reset stop flag
+                shouldStopAnalysis = false;
+                
+                // Process files one by one
+                processNextFile(videoFiles);
+            }
+            
+            // Process the next file in the queue
+            function processNextFile(filesToProcess) {
+                if (filesToProcess.length === 0 || shouldStopAnalysis) {
+                    // All files processed or stopped
+                    currentFile.classList.add('hidden');
+                    isProcessing = false;
+                    return;
+                }
+                
+                isProcessing = true;
+                currentProcessingFile = filesToProcess[0];
+                
+                // Update current file display
+                currentFile.textContent = `Processing: ${currentProcessingFile.name} (${processedFiles.indexOf(currentProcessingFile) + 1}/${processedFiles.length})`;
+                currentFile.classList.remove('hidden');
+                
+                // Process file
+                processFile(currentProcessingFile, filesToProcess.slice(1));
+            }
+            
+            // Recalculate a specific file
+            function recalculateFile(file) {
+                if (isProcessing) return;
+                
+                isProcessing = true;
+                currentProcessingFile = file;
+                
+                // Reset stop flag
+                shouldStopAnalysis = false;
+                
+                // Show loading info
+                currentFile.textContent = `Recalculating: ${file.name}`;
+                currentFile.classList.remove('hidden');
+                
+                // Process the file
+                processFile(file, [], true);
+            }
+            
+            // Process a single video file
+            function processFile(file, remainingFiles = [], isRecalculation = false) {
+                // Reset UI for this file
+                resultsContainer.classList.add('hidden');
                 progressContainer.classList.remove('hidden');
-                progressPercent.textContent = '0';
+                progressPercent.textContent = '0%';
                 progressFill.style.width = '0%';
                 
                 // Create a URL for the video file
                 const videoUrl = URL.createObjectURL(file);
                 
+                // If recalculating, update existing table row with "recalculating" status
+                if (isRecalculation) {
+                    const existingRow = findResultRowByFileName(file.name);
+                    if (existingRow) {
+                        const cells = existingRow.querySelectorAll('td');
+                        if (cells.length >= 3) {
+                            cells[1].innerHTML = '<span class="pulse">Recalculating...</span>';
+                            cells[2].innerHTML = '';
+                        }
+                    }
+                }
+                
                 // Detect the frame rate
-                detectTrueFPS(videoUrl, file.name);
+                detectTrueFPS(videoUrl, file.name, function(result) {
+                    // Add or update result
+                    updateResults(result, isRecalculation);
+                    
+                    // Clean up
+                    URL.revokeObjectURL(videoUrl);
+                    
+                    // Process remaining files if not recalculating
+                    if (!isRecalculation && !shouldStopAnalysis) {
+                        const timeout = setTimeout(() => processNextFile(remainingFiles), 300);
+                        currentAnalysisTimeouts.push(timeout);
+                    } else {
+                        isProcessing = false;
+                        currentFile.classList.add('hidden');
+                        if (isRecalculation) {
+                            showStatusMessage('Recalculation complete!');
+                        }
+                    }
+                });
             }
             
-            function detectTrueFPS(videoUrl, fileName) {
+            // Find a result row by filename
+            function findResultRowByFileName(fileName) {
+                const rows = resultsTableBody.querySelectorAll('tr');
+                for (const row of rows) {
+                    const firstCell = row.querySelector('td');
+                    if (firstCell && firstCell.textContent === fileName) {
+                        return row;
+                    }
+                }
+                return null;
+            }
+            
+            // Update results in UI
+            function updateResults(result, isRecalculation) {
+                // Hide progress
+                progressContainer.classList.add('hidden');
+                
+                // Find existing result if recalculating
+                let existingResultIndex = -1;
+                if (isRecalculation) {
+                    existingResultIndex = allResults.findIndex(r => r.fileName === result.fileName);
+                }
+                
+                if (existingResultIndex >= 0) {
+                    // Update existing result
+                    allResults[existingResultIndex] = result;
+                } else {
+                    // Add new result
+                    allResults.push(result);
+                }
+                
+                // Set as current displayed result
+                currentDisplayedResult = result;
+                
+                // Update table if we have multiple results
+                if (processedFiles.length > 1) {
+                    const existingRow = findResultRowByFileName(result.fileName);
+                    
+                    if (existingRow && isRecalculation) {
+                        // Update existing row for recalculated file
+                        updateResultRow(existingRow, result);
+                    } else if (!existingRow) {
+                        // Add new row
+                        addResultRow(result);
+                    }
+                    
+                    // Update active status for all rows
+                    updateActiveRows(result.fileName);
+                    
+                    bulkResultsContainer.classList.remove('hidden');
+                } else {
+                    bulkResultsContainer.classList.add('hidden');
+                }
+                
+                // Always show individual result details for current file
+                showIndividualResult(result);
+            }
+            
+            // Show individual result details
+            function showIndividualResult(result) {
+                resultsContainer.classList.remove('hidden');
+                
+                // Update results
+                fpsValue.textContent = result.fps;
+                
+                // Add subtitle
+                if (result.isVariable) {
+                    fpsSubtitle.textContent = `Variable frame rate`;
+                } else {
+                    fpsSubtitle.textContent = `Constant frame rate`;
+                }
+                
+                // Check if we need to show a warning
+                if (shouldShowWarning(result)) {
+                    warningMessage.classList.remove('hidden');
+                } else {
+                    warningMessage.classList.add('hidden');
+                }
+                
+                // Build detailed analysis report
+                analysisDetails.innerHTML = `
+                    <p><strong>File:</strong> ${result.fileName}</p>
+                    <p><strong>Accuracy:</strong> ${result.accuracy}</p>
+                    <p><strong>Tolerance:</strong> ${result.tolerance}</p>
+                    <p>${result.details}</p>
+                    <p class="metadata">Analysis time: ${result.duration.toFixed(2)} seconds</p>
+                    <p class="note">Results based on direct frame change detection with mode-based averaging.</p>
+                `;
+            }
+            
+            // Check if warning should be displayed
+            function shouldShowWarning(result) {
+                // First check if the result is an error
+                if (result.accuracyLevel === 'error') return false;
+                
+                // Get the FPS and metadata FPS
+                const fps = parseFloat(result.fps);
+                const metadataFps = parseFloat(result.metadataFps);
+                
+                if (isNaN(fps) || isNaN(metadataFps)) return false;
+                
+                // Check if FPS is not an integer and is 5x+ smaller than metadata FPS
+                if (!Number.isInteger(fps) && metadataFps / fps >= 5) {
+                    return true;
+                }
+                
+                // Check if FPS is an integer but 10x+ smaller than metadata FPS
+                if (Number.isInteger(fps) && metadataFps / fps >= 10) {
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // Update active status for all rows
+            function updateActiveRows(activeFileName) {
+                const rows = resultsTableBody.querySelectorAll('tr');
+                for (const row of rows) {
+                    const firstCell = row.querySelector('td');
+                    if (firstCell) {
+                        if (firstCell.textContent === activeFileName) {
+                            row.classList.add('active');
+                        } else {
+                            row.classList.remove('active');
+                        }
+                    }
+                }
+            }
+            
+            // Add a new row to the results table
+            function addResultRow(result) {
+                const row = document.createElement('tr');
+                row.dataset.filename = result.fileName;
+                
+                // Make entire row clickable to show result
+                row.addEventListener('click', function(e) {
+                    // Ignore clicks on the recalculate button
+                    if (e.target.closest('button')) return;
+                    
+                    // Find and display the clicked result
+                    const clickedResult = allResults.find(r => r.fileName === this.dataset.filename);
+                    if (clickedResult) {
+                        currentDisplayedResult = clickedResult;
+                        showIndividualResult(clickedResult);
+                        updateActiveRows(clickedResult.fileName);
+                    }
+                });
+                
+                // File name cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = result.fileName;
+                row.appendChild(nameCell);
+                
+                // FPS cell
+                const fpsCell = document.createElement('td');
+                fpsCell.textContent = result.fps;
+                row.appendChild(fpsCell);
+                
+                // Type cell with badge
+                const typeCell = document.createElement('td');
+                const typeBadge = document.createElement('span');
+                typeBadge.className = result.isVariable ? 'badge badge-variable' : 'badge badge-constant';
+                typeBadge.textContent = result.isVariable ? "Variable" : "Constant";
+                typeCell.appendChild(typeBadge);
+                row.appendChild(typeCell);
+                
+                // Accuracy cell with badge
+                const accuracyCell = document.createElement('td');
+                const accuracyBadge = document.createElement('span');
+                accuracyBadge.className = 'badge badge-accuracy';
+                accuracyBadge.textContent = result.accuracyLevel.charAt(0).toUpperCase() + result.accuracyLevel.slice(1);
+                accuracyCell.appendChild(accuracyBadge);
+                row.appendChild(accuracyCell);
+                
+                // Actions cell
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'actions';
+                
+                // Create recalculate button
+                const recalcBtn = document.createElement('button');
+                recalcBtn.className = 'btn btn-primary btn-small';
+                recalcBtn.dataset.filename = result.fileName;
+                recalcBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Recalculate
+                `;
+                
+                // Event listener for recalculate button
+                recalcBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent row click event
+                    
+                    if (isProcessing) {
+                        showStatusMessage('Please wait until current analysis completes or click Stop', true);
+                        return;
+                    }
+                    
+                    const fileToRecalculate = processedFiles.find(f => f.name === this.dataset.filename);
+                    if (fileToRecalculate) {
+                        recalculateFile(fileToRecalculate);
+                    }
+                });
+                
+                actionsCell.appendChild(recalcBtn);
+                row.appendChild(actionsCell);
+                
+                // Add row to table
+                resultsTableBody.appendChild(row);
+            }
+            
+            // Update an existing result row
+            function updateResultRow(row, result) {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 5) {
+                    // Update FPS
+                    cells[1].textContent = result.fps;
+                    
+                    // Update type badge
+                    const typeBadge = document.createElement('span');
+                    typeBadge.className = result.isVariable ? 'badge badge-variable' : 'badge badge-constant';
+                    typeBadge.textContent = result.isVariable ? "Variable" : "Constant";
+                    cells[2].innerHTML = '';
+                    cells[2].appendChild(typeBadge);
+                    
+                    // Update accuracy badge
+                    const accuracyBadge = document.createElement('span');
+                    accuracyBadge.className = 'badge badge-accuracy';
+                    accuracyBadge.textContent = result.accuracyLevel.charAt(0).toUpperCase() + result.accuracyLevel.slice(1);
+                    cells[3].innerHTML = '';
+                    cells[3].appendChild(accuracyBadge);
+                }
+            }
+            
+            // Update progress indicator
+            function updateProgress(percent) {
+                const roundedPercent = Math.round(percent);
+                progressPercent.textContent = `${roundedPercent}%`;
+                progressFill.style.width = `${percent}%`;
+            }
+            
+            // Get analysis duration based on accuracy setting
+            function getAnalysisDuration(selectedAccuracy, videoDuration) {
+                switch (selectedAccuracy) {
+                    case 'low':
+                        return 0.5; // Half second
+                    case 'medium':
+                        return 1;   // 1 second
+                    case 'high':
+                        return 3;   // 3 seconds
+                    case 'extreme':
+                        return 8;   // 8 seconds
+                    case 'placebo':
+                        // For placebo, use full video duration up to 60 seconds
+                        return Math.min(videoDuration, 60);
+                    default:
+                        return 1;   // Default to medium (1 second)
+                }
+            }
+            
+            // Get detection tolerance based on user selection
+            function getDetectionTolerance(selectedTolerance) {
+                switch (selectedTolerance) {
+                    case 'standard':
+                        return { pixelThreshold: 3, changedBlockThreshold: 5 }; // Standard (More Sensitive)
+                    case 'high':
+                        return { pixelThreshold: 5, changedBlockThreshold: 8 }; // High
+                    case 'veryHigh':
+                        return { pixelThreshold: 8, changedBlockThreshold: 12 }; // Very High
+                    default:
+                        return { pixelThreshold: 5, changedBlockThreshold: 8 }; // Default
+                }
+            }
+            
+            // Format tolerance for display
+            function formatToleranceText(tolerance) {
+                switch (tolerance) {
+                    case 'standard': return "Standard";
+                    case 'high': return "High";
+                    case 'veryHigh': return "Very High";
+                    default: return "High";
+                }
+            }
+            
+            // Find nearest common frame rate below the detected rate
+            function findNearestCommonFrameRate(fps) {
+                if (isNaN(fps) || !isFinite(fps) || fps <= 0) {
+                    return 30; // Default to 30fps if the value is invalid
+                }
+                
+                // First check for exact matches (with tiny tolerance)
+                for (const rate of commonFrameRates) {
+                    // Allow 0.1% tolerance for exact matches
+                    if (Math.abs(fps - rate) / rate < 0.001) {
+                        return rate;
+                    }
+                }
+                
+                // Find nearest common rate that is LESS than or equal to the detected fps
+                let nearestRate = null;
+                let minDiff = Infinity;
+                
+                for (const rate of commonFrameRates) {
+                    // Only consider rates less than or equal to fps
+                    if (rate <= fps) {
+                        const diff = fps - rate;
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            nearestRate = rate;
+                        }
+                    }
+                }
+                
+                // If we found a rate and it's within 1 frame difference, use it
+                if (nearestRate !== null) {
+                    // Calculate the frame time of the detected fps
+                    const frameTime = 1 / fps;
+                    
+                    // Calculate frame time of the nearest rate
+                    const nearestFrameTime = 1 / nearestRate;
+                    
+                    // If difference is less than 1 frame time, use the common rate
+                    if (Math.abs(nearestFrameTime - frameTime) < frameTime) {
+                        return nearestRate;
+                    }
+                }
+                
+                // Otherwise, round to 3 decimal places (no rounding up)
+                return Math.floor(fps * 1000) / 1000;
+            }
+            
+            // Find most frequent interval (mode) and calculate FPS from it
+            function calculateModeFrameRate(intervals) {
+                if (!intervals || intervals.length === 0) return null;
+                
+                // Group similar intervals (within 0.5ms of each other)
+                const tolerance = 0.0005; // 0.5ms tolerance
+                const groups = [];
+                
+                for (const interval of intervals) {
+                    // Skip invalid intervals
+                    if (interval <= 0 || !isFinite(interval)) continue;
+                    
+                    let foundGroup = false;
+                    
+                    for (const group of groups) {
+                        if (Math.abs(interval - group.interval) <= tolerance) {
+                            group.count++;
+                            group.sum += interval;
+                            foundGroup = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!foundGroup) {
+                        groups.push({
+                            interval: interval,
+                            count: 1,
+                            sum: interval
+                        });
+                    }
+                }
+                
+                // Safety check - if no valid groups
+                if (groups.length === 0) return 30;
+                
+                // Sort groups by count (most frequent first)
+                groups.sort((a, b) => b.count - a.count);
+                
+                // Use the most frequent interval if it represents at least 30% of all intervals
+                if (groups.length > 0 && groups[0].count / intervals.length >= 0.3) {
+                    const modeInterval = groups[0].sum / groups[0].count; // Average within the group
+                    return 1 / modeInterval;
+                }
+                
+                // If no clear mode, use average of all intervals
+                let sum = 0;
+                let count = 0;
+                for (const interval of intervals) {
+                    if (interval > 0 && isFinite(interval)) {
+                        sum += interval;
+                        count++;
+                    }
+                }
+                
+                // Safety check
+                if (count === 0) return 30;
+                
+                const avgInterval = sum / count;
+                return 1 / avgInterval;
+            }
+            
+            function detectTrueFPS(videoUrl, fileName, callback) {
                 const video = document.createElement('video');
                 video.preload = 'auto';
                 video.muted = true;
@@ -275,208 +1676,404 @@
                 canvas.width = 160;  // Small size for performance
                 canvas.height = 90;
                 
+                // Get selected tolerance
+                const selectedTolerance = toleranceSelector.value;
+                const toleranceSettings = getDetectionTolerance(selectedTolerance);
+                
+                // Error handling with timeout
+                const loadTimeout = setTimeout(() => {
+                    if (shouldStopAnalysis) return;
+                    
+                    showError(`Video load timed out: ${fileName}. The file may be too large or corrupted.`);
+                    video.onerror = null; // Remove handler to avoid double calls
+                    callback({
+                        fileName: fileName,
+                        fps: 30,
+                        rawFps: 30,
+                        modeFps: 30,
+                        frameCount: 0,
+                        duration: 0,
+                        accuracy: 'Error',
+                        accuracyLevel: 'error',
+                        isVariable: false,
+                        metadataFps: 30,
+                        tolerance: formatToleranceText(selectedTolerance),
+                        details: 'Error loading video. Processing timed out.'
+                    });
+                }, 20000); // 20 second timeout
+                
+                currentAnalysisTimeouts.push(loadTimeout);
+                
                 // Error handling
                 video.onerror = function() {
-                    URL.revokeObjectURL(videoUrl);
-                    showError('Error loading video. The format may not be supported by your browser.');
+                    clearTimeout(loadTimeout);
+                    if (shouldStopAnalysis) return;
+                    
+                    showError(`Error loading video: ${fileName}. The format may not be supported by your browser.`);
+                    callback({
+                        fileName: fileName,
+                        fps: 30,
+                        rawFps: 30,
+                        modeFps: 30,
+                        frameCount: 0,
+                        duration: 0,
+                        accuracy: 'Error',
+                        accuracyLevel: 'error',
+                        isVariable: false,
+                        metadataFps: 30,
+                        tolerance: formatToleranceText(selectedTolerance),
+                        details: 'Error loading video. The format may not be supported.'
+                    });
                 };
                 
                 // Start analysis once metadata is loaded
                 video.onloadedmetadata = function() {
+                    clearTimeout(loadTimeout);
+                    if (shouldStopAnalysis) return;
+                    
                     const duration = video.duration;
                     
                     if (duration < 1) {
-                        showError('Video is too short to analyze. Please use a video that is at least 1 second long.');
-                        URL.revokeObjectURL(videoUrl);
+                        showError(`Video is too short to analyze: ${fileName}. Please use a video that is at least 1 second long.`);
+                        callback({
+                            fileName: fileName,
+                            fps: 30,
+                            rawFps: 30,
+                            modeFps: 30,
+                            frameCount: 0,
+                            duration: 0,
+                            accuracy: 'Error',
+                            accuracyLevel: 'error',
+                            isVariable: false,
+                            metadataFps: 30,
+                            tolerance: formatToleranceText(selectedTolerance),
+                            details: 'Video is too short to analyze. Please use a video that is at least 1 second long.'
+                        });
                         return;
                     }
                     
-                    // Perform fixed-interval analysis
-                    analyzeWithFixedIntervals(duration)
+                    // Get selected accuracy level
+                    const selectedAccuracy = accuracySelector.value;
+                    const analysisDuration = getAnalysisDuration(selectedAccuracy, duration);
+                    
+                    // Format accuracy for display
+                    let accuracyText = "";
+                    switch (selectedAccuracy) {
+                        case 'low': accuracyText = "Low (half a second sample)"; break;
+                        case 'medium': accuracyText = "Medium (1 second sample)"; break;
+                        case 'high': accuracyText = "High (3 second sample)"; break;
+                        case 'extreme': accuracyText = "Extreme (8 second sample)"; break;
+                        case 'placebo': accuracyText = `Placebo (${Math.min(duration, 60).toFixed(1)} second sample)`; break;
+                    }
+                    
+                    // Try to get metadata framerate - default to 30fps
+                    let metadataFps = 30;
+                    
+                    // Perform optimized interval analysis
+                    analyzeWithOptimizedIntervals(duration, analysisDuration, metadataFps, toleranceSettings)
                         .then(result => {
-                            // Display results
-                            displayResults({
-                                fps: result.uniqueFrames,
-                                isVariable: false,
-                                confidence: 100,
-                                details: `Analyzed using high-precision frame detection at 5ms intervals.<br>
-                                        Detected ${result.uniqueFrames} unique frames over ${result.actualDuration.toFixed(3)} seconds.`
-                            }, fileName);
-                            URL.revokeObjectURL(videoUrl);
+                            if (shouldStopAnalysis) return;
+                            
+                            // Calculate raw FPS from frame count and duration
+                            const rawFps = result.uniqueFrames / result.actualDuration;
+                            
+                            // Calculate mode-based FPS if we have enough frame intervals
+                            let modeFps = null;
+                            if (result.frameIntervals.length >= 5) {
+                                modeFps = calculateModeFrameRate(result.frameIntervals);
+                            } else {
+                                modeFps = rawFps;
+                            }
+                            
+                            // Round to nearest common frame rate (never rounding up)
+                            const standardFps = findNearestCommonFrameRate(modeFps);
+                            
+                            // Create result object
+                            const finalResult = {
+                                fileName: fileName,
+                                rawFps: rawFps,
+                                modeFps: modeFps,
+                                fps: standardFps,
+                                frameCount: result.uniqueFrames,
+                                duration: result.actualDuration,
+                                accuracy: accuracyText,
+                                accuracyLevel: selectedAccuracy,
+                                metadataFps: metadataFps,
+                                isVariable: result.isVariable,
+                                tolerance: formatToleranceText(selectedTolerance),
+                                details: `Analyzed using optimized frame detection with ${result.samples} samples.<br>
+                                          Detected ${result.uniqueFrames} unique frames over ${result.actualDuration.toFixed(3)} seconds.<br>
+                                          Raw calculated FPS: ${rawFps.toFixed(3)}<br>
+                                          Mode-based FPS: ${modeFps.toFixed(3)}<br>
+                                          Final rounded rate: ${standardFps}`
+                            };
+                            
+                            // Return result via callback
+                            callback(finalResult);
                         })
                         .catch(error => {
-                            showError('Analysis error: ' + error.message);
-                            URL.revokeObjectURL(videoUrl);
+                            if (shouldStopAnalysis) return;
+                            
+                            console.error(error);
+                            showError(`Analysis error for ${fileName}: ${error.message}`);
+                            
+                            // Return error result
+                            callback({
+                                fileName: fileName,
+                                fps: 30,
+                                rawFps: 30,
+                                modeFps: 30,
+                                frameCount: 0,
+                                duration: 0,
+                                accuracy: 'Error',
+                                accuracyLevel: 'error',
+                                isVariable: false,
+                                metadataFps: 30,
+                                tolerance: formatToleranceText(selectedTolerance),
+                                details: `Error analyzing video: ${error.message}`
+                            });
                         });
                 };
                 
-                // Analyze video with fixed 5ms intervals
-                async function analyzeWithFixedIntervals(duration) {
+                // Analyze video with optimized intervals
+                async function analyzeWithOptimizedIntervals(duration, analysisDuration, metadataFps, toleranceSettings) {
                     return new Promise((resolve, reject) => {
-                        // Set starting point (skip potential blank frames at beginning)
-                        const startTime = Math.min(0.5, duration * 0.1);
-                        let currentTime = startTime;
+                        // Set a timeout to prevent hanging on problematic videos
+                        const analysisTimeout = setTimeout(() => {
+                            reject(new Error('Analysis timed out. The video may be too complex to process.'));
+                        }, 60000); // 60 second timeout for analysis
                         
-                        const samplingInterval = 0.005; // 5ms sampling (200Hz)
-                        const maxSamples = 200; // Total 1 second of samples
-                        let sampleCount = 0;
-                        let lastFrameSignature = null;
-                        let firstSampleTime = null;
-                        let lastSampleTime = null;
+                        currentAnalysisTimeouts.push(analysisTimeout);
                         
-                        // Track unique frames
-                        let uniqueFrames = 0;
-                        
-                        // Position video at start
-                        video.currentTime = startTime;
-                        
-                        video.onseeked = function initialSeek() {
-                            // Capture first frame
-                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            lastFrameSignature = computeFrameSignature(ctx);
-                            firstSampleTime = currentTime;
-                            uniqueFrames = 1; // Count first frame
+                        try {
+                            // Calculate sampling interval from metadata fps
+                            // Sample at 4x the metadata framerate to ensure accuracy
+                            const samplingInterval = 1 / (metadataFps * 4);
                             
-                            // Start sampling
-                            currentTime += samplingInterval;
-                            sampleCount = 1;
-                            updateProgress(5); // Start progress at 5%
+                            // Make sure it's reasonable (not less than 1ms or more than 8.33ms)
+                            const finalInterval = Math.min(0.00833, Math.max(0.001, samplingInterval));
                             
-                            // Change function to handle subsequent seeks
-                            video.onseeked = checkForFrameChange;
+                            // Set starting point (skip potential blank frames at beginning)
+                            const startTime = Math.min(0.5, duration * 0.1);
+                            let currentTime = startTime;
                             
-                            // Seek to next position
-                            video.currentTime = currentTime;
-                        };
-                        
-                        function checkForFrameChange() {
-                            // Update progress
-                            const progressPercent = 5 + (sampleCount / maxSamples) * 90;
-                            updateProgress(progressPercent);
+                            // Calculate number of samples needed, capped at a reasonable number
+                            const maxSamplesPerSecond = Math.min(1000, metadataFps * 4);
+                            const maxSamples = Math.ceil(maxSamplesPerSecond * analysisDuration);
                             
-                            // Remember this sample time
-                            lastSampleTime = currentTime;
+                            let sampleCount = 0;
+                            let lastFrameSignature = null;
+                            let firstSampleTime = null;
+                            let lastSampleTime = null;
                             
-                            // Draw current frame to canvas
-                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            const currentSignature = computeFrameSignature(ctx);
+                            // Track unique frames and frame times
+                            let uniqueFrames = 0;
+                            const frameChangeTimes = [];
+                            const frameIntervals = [];
                             
-                            // Check if this is a new frame
-                            if (!isSameFrame(currentSignature, lastFrameSignature)) {
-                                uniqueFrames++;
-                                lastFrameSignature = currentSignature;
-                            }
+                            // Variables to detect if framerate is variable
+                            let isVariable = false;
                             
-                            // Move to next sample point
-                            currentTime += samplingInterval;
-                            sampleCount++;
+                            // Get tolerance settings
+                            const pixelThreshold = toleranceSettings.pixelThreshold;
+                            const changedBlockThreshold = toleranceSettings.changedBlockThreshold;
                             
-                            // Stop after max samples or end of video
-                            if (sampleCount >= maxSamples || currentTime >= duration) {
-                                // Calculate actual duration sampled
-                                const actualDuration = lastSampleTime - firstSampleTime + samplingInterval;
+                            // Position video at start
+                            video.currentTime = startTime;
+                            
+                            video.onseeked = function initialSeek() {
+                                if (shouldStopAnalysis) {
+                                    clearTimeout(analysisTimeout);
+                                    resolve({
+                                        uniqueFrames: 0,
+                                        actualDuration: 0,
+                                        samples: 0,
+                                        frameIntervals: [],
+                                        isVariable: false
+                                    });
+                                    return;
+                                }
                                 
-                                resolve({
-                                    uniqueFrames: uniqueFrames,
-                                    actualDuration: actualDuration,
-                                    samples: sampleCount
-                                });
-                                return;
-                            }
-                            
-                            // Continue to next sample
-                            video.currentTime = currentTime;
-                        }
-                        
-                        // Compute optimized frame signature
-                        function computeFrameSignature(ctx) {
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                            
-                            // Use a 16x9 grid for signature (matches 16:9 aspect ratio)
-                            const signature = new Uint8Array(144); // 16x9 grid
-                            const blockWidth = Math.floor(canvas.width / 16);
-                            const blockHeight = Math.floor(canvas.height / 9);
-                            
-                            let index = 0;
-                            for (let y = 0; y < 9; y++) {
-                                for (let x = 0; x < 16; x++) {
-                                    // Sample center of each block
-                                    const pixelX = x * blockWidth + Math.floor(blockWidth / 2);
-                                    const pixelY = y * blockHeight + Math.floor(blockHeight / 2);
+                                // Capture first frame
+                                try {
+                                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                    lastFrameSignature = computeFrameSignature(ctx);
+                                    firstSampleTime = currentTime;
+                                    uniqueFrames = 1; // Count first frame
+                                    frameChangeTimes.push(currentTime);
                                     
-                                    const idx = (pixelY * canvas.width + pixelX) * 4;
+                                    // Start sampling
+                                    currentTime += finalInterval;
+                                    sampleCount = 1;
+                                    updateProgress(5); // Start progress at 5%
                                     
-                                    // Use luminance for change detection
-                                    const luma = Math.round(
-                                        0.299 * imageData[idx] + 
-                                        0.587 * imageData[idx + 1] + 
-                                        0.114 * imageData[idx + 2]
-                                    );
+                                    // Change function to handle subsequent seeks
+                                    video.onseeked = checkForFrameChange;
                                     
-                                    signature[index++] = luma;
+                                    // Seek to next position
+                                    video.currentTime = currentTime;
+                                } catch (e) {
+                                    clearTimeout(analysisTimeout);
+                                    reject(new Error('Error capturing video frame: ' + e.message));
+                                }
+                            };
+                            
+                            function checkForFrameChange() {
+                                if (shouldStopAnalysis) {
+                                    clearTimeout(analysisTimeout);
+                                    resolve({
+                                        uniqueFrames: uniqueFrames,
+                                        actualDuration: lastSampleTime ? (lastSampleTime - firstSampleTime) : 0,
+                                        samples: sampleCount,
+                                        frameIntervals: frameIntervals,
+                                        isVariable: false
+                                    });
+                                    return;
+                                }
+                                
+                                try {
+                                    // Update progress
+                                    const progressPercent = 5 + (sampleCount / maxSamples) * 90;
+                                    updateProgress(progressPercent);
+                                    
+                                    // Remember this sample time
+                                    lastSampleTime = currentTime;
+                                    
+                                    // Draw current frame to canvas
+                                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                    const currentSignature = computeFrameSignature(ctx);
+                                    
+                                    // Check if this is a new frame with custom tolerance settings
+                                    if (!isSameFrame(currentSignature, lastFrameSignature, pixelThreshold, changedBlockThreshold)) {
+                                        uniqueFrames++;
+                                        lastFrameSignature = currentSignature;
+                                        
+                                        // Calculate frame interval
+                                        if (frameChangeTimes.length > 0) {
+                                            const interval = currentTime - frameChangeTimes[frameChangeTimes.length - 1];
+                                            // Only add reasonable intervals (not too short)
+                                            if (interval > 0.0005) {
+                                                frameIntervals.push(interval);
+                                            }
+                                        }
+                                        
+                                        frameChangeTimes.push(currentTime);
+                                    }
+                                    
+                                    // Move to next sample point
+                                    currentTime += finalInterval;
+                                    sampleCount++;
+                                    
+                                    // Stop after max samples or end of video
+                                    if (sampleCount >= maxSamples || currentTime >= duration - 0.1) {
+                                        clearTimeout(analysisTimeout);
+                                        
+                                        // Calculate actual duration sampled
+                                        const actualDuration = lastSampleTime - firstSampleTime + finalInterval;
+                                        
+                                        // Check if framerate is variable by analyzing variance in frame intervals
+                                        if (frameIntervals.length >= 10) {
+                                            // Calculate average and variance
+                                            const sum = frameIntervals.reduce((a, b) => a + b, 0);
+                                            const avg = sum / frameIntervals.length;
+                                            
+                                            // Calculate variance
+                                            const variance = frameIntervals.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / frameIntervals.length;
+                                            const stdDev = Math.sqrt(variance);
+                                            
+                                            // If standard deviation is more than 5% of the average, consider it variable
+                                            isVariable = (stdDev / avg) > 0.05;
+                                        }
+                                        
+                                        resolve({
+                                            uniqueFrames: uniqueFrames,
+                                            actualDuration: actualDuration,
+                                            samples: sampleCount,
+                                            frameIntervals: frameIntervals,
+                                            isVariable: isVariable
+                                        });
+                                        return;
+                                    }
+                                    
+                                    // Continue to next sample
+                                    video.currentTime = currentTime;
+                                } catch (e) {
+                                    clearTimeout(analysisTimeout);
+                                    reject(new Error('Error during frame analysis: ' + e.message));
                                 }
                             }
                             
-                            return signature;
-                        }
-                        
-                        // Check if two frames are the same
-                        function isSameFrame(sig1, sig2) {
-                            if (!sig1 || !sig2) return false;
-                            
-                            // Threshold for pixel difference to be considered changed
-                            const pixelThreshold = 5;
-                            
-                            // How many changed pixels needed to consider a new frame
-                            const changedBlockThreshold = 8;
-                            
-                            let changedBlocks = 0;
-                            
-                            for (let i = 0; i < sig1.length; i++) {
-                                if (Math.abs(sig1[i] - sig2[i]) > pixelThreshold) {
-                                    changedBlocks++;
-                                    
-                                    // Early exit for efficiency
-                                    if (changedBlocks > changedBlockThreshold) {
-                                        return false; // Different frame
+                            // Compute optimized frame signature
+                            function computeFrameSignature(ctx) {
+                                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                                
+                                // Use a 16x9 grid for signature (matches 16:9 aspect ratio)
+                                const signature = new Uint8Array(144); // 16x9 grid
+                                const blockWidth = Math.floor(canvas.width / 16);
+                                const blockHeight = Math.floor(canvas.height / 9);
+                                
+                                let index = 0;
+                                for (let y = 0; y < 9; y++) {
+                                    for (let x = 0; x < 16; x++) {
+                                        // Sample center of each block
+                                        const pixelX = x * blockWidth + Math.floor(blockWidth / 2);
+                                        const pixelY = y * blockHeight + Math.floor(blockHeight / 2);
+                                        
+                                        const idx = (pixelY * canvas.width + pixelX) * 4;
+                                        
+                                        // Use luminance for change detection
+                                        const luma = Math.round(
+                                            0.299 * imageData[idx] + 
+                                            0.587 * imageData[idx + 1] + 
+                                            0.114 * imageData[idx + 2]
+                                        );
+                                        
+                                        signature[index++] = luma;
                                     }
                                 }
+                                
+                                return signature;
                             }
                             
-                            return true; // Same frame
+                            // Check if two frames are the same with custom tolerance
+                            function isSameFrame(sig1, sig2, pixelThreshold, changedBlockThreshold) {
+                                if (!sig1 || !sig2) return false;
+                                
+                                let changedBlocks = 0;
+                                
+                                for (let i = 0; i < sig1.length; i++) {
+                                    if (Math.abs(sig1[i] - sig2[i]) > pixelThreshold) {
+                                        changedBlocks++;
+                                        
+                                        // Early exit for efficiency
+                                        if (changedBlocks > changedBlockThreshold) {
+                                            return false; // Different frame
+                                        }
+                                    }
+                                }
+                                
+                                return true; // Same frame
+                            }
+                        } catch (e) {
+                            clearTimeout(analysisTimeout);
+                            reject(new Error('Error initializing analysis: ' + e.message));
                         }
                     });
                 }
             }
             
-            // Display the results
-            function displayResults(result, fileName) {
-                // Hide progress, show results
-                progressContainer.classList.add('hidden');
-                resultsContainer.style.display = 'block';
-                
-                // Update results
-                fpsValue.textContent = result.fps;
-                
-                // Add subtitle
-                if (result.isVariable) {
-                    fpsSubtitle.textContent = `Variable frame rate detected`;
-                } else {
-                    fpsSubtitle.textContent = `Constant frame rate (${result.confidence}% confidence)`;
-                }
-                
-                analysisDetails.innerHTML = `
-                    <p>File analyzed: ${fileName}</p>
-                    <p>${result.details}</p>
-                    <p class="note">Note: Results based on high-precision 5ms interval sampling over one second period.</p>
-                `;
-            }
-            
             // Show error message
             function showError(message) {
                 errorMessage.textContent = message;
-                errorMessage.style.display = 'block';
+                errorMessage.classList.remove('hidden');
                 progressContainer.classList.add('hidden');
+                
+                // Auto-hide after 8 seconds
+                const timeout = setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 8000);
+                
+                currentAnalysisTimeouts.push(timeout);
             }
         });
     </script>
