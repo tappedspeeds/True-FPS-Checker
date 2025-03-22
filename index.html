@@ -3,253 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>True Frame Rate Detector</title>
+    <title>Military-Grade FPS Detector</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background: #f0f3f5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #1a73e8;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        .drop-zone {
-            border: 2px dashed #1a73e8;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            margin-bottom: 20px;
-            transition: background 0.2s;
-        }
-
-        .drop-zone.dragover {
-            background: #e8f0fe;
-        }
-
-        .results {
-            display: none;
-            margin-top: 20px;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        .progress {
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #1a73e8;
-            transition: width 0.3s ease;
-            width: 0;
-        }
-
-        .error {
-            color: #dc3545;
-            margin-top: 10px;
-            display: none;
-        }
+        /* Maintain previous styling */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background: #f0f3f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; margin-bottom: 20px; }
+        .drop-zone { border: 2px dashed #1a73e8; border-radius: 8px; padding: 30px; text-align: center; margin-bottom: 20px; transition: background 0.2s; }
+        .progress { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin: 20px 0; }
+        .progress-fill { height: 100%; background: #1a73e8; transition: width 0.3s ease; width: 0; }
+        .error { color: #dc3545; margin-top: 10px; display: none; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 6px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>True Video FPS Detector</h1>
+        <h1>🔍 True Frame Rate Analyzer</h1>
         <div class="drop-zone" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
-            Drag and drop video file here or click to select
+            🎥 Drag video file here or click to select
             <input type="file" id="fileInput" hidden accept="video/*" onchange="handleFileSelect(event)">
         </div>
         <div class="progress">
             <div class="progress-fill"></div>
         </div>
-        <div class="results">
-            <div id="resultText"></div>
-            <div id="analysisDetails"></div>
-        </div>
+        <pre id="results" style="display: none;"></pre>
         <div class="error" id="error"></div>
     </div>
 
-    <script>
-        const STANDARD_FPS = [
-            23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60, 75, 90, 100, 120, 144, 240
-        ];
+<script>
+const FRAME_RATE_STANDARDS = {
+    '23.976': ['NTSC Film'],
+    '24': ['Cinema'],
+    '25': ['PAL/SECAM'],
+    '29.97': ['NTSC Video'],
+    '30': ['ATSC Digital'],
+    '50': ['PAL HFR'],
+    '59.94': ['NTSC HFR'],
+    '60': ['ATSC Digital HFR'],
+    '120': ['Ultra HFR']
+};
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('dragover');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) processFile(file);
-        }
-
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) processFile(file);
-        }
-
-        document.querySelector('.drop-zone').addEventListener('click', () => {
-            document.getElementById('fileInput').click();
+class ForensicFrameAnalyzer {
+    static async analyze(file) {
+        const video = await this.loadVideo(file);
+        return new Promise(resolve => {
+            const analyzer = new ForensicFrameAnalyzer(video, resolve);
+            analyzer.start();
         });
+    }
 
-        async function processFile(file) {
-            try {
-                resetUI();
-                const video = await createVideoElement(file);
-                const fps = await analyzeVideoFPS(video);
-                displayResults(fps, file.name);
-            } catch (error) {
-                showError(error.message);
+    static loadVideo(file) {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.muted = true;
+            video.playsInline = true;
+            video.src = URL.createObjectURL(file);
+
+            video.onloadedmetadata = () => {
+                if (video.duration < 1) reject(new Error('Minimum 1 second video required'));
+                resolve(video);
+            };
+
+            video.onerror = () => reject(new Error('Failed to load video'));
+        });
+    }
+
+    constructor(video, callback) {
+        this.video = video;
+        this.callback = callback;
+        this.timings = [];
+        this.frameCount = 0;
+        this.startTime = Date.now();
+        this.analysisMethods = {
+            timingAnalysis: null,
+            pixelAnalysis: null,
+            durationAnalysis: null
+        };
+    }
+
+    start() {
+        this.video.play();
+        this.runTimingAnalysis();
+        this.runPixelAnalysis();
+        this.runDurationAnalysis();
+    }
+
+    // Method 1: Precise frame timing analysis
+    runTimingAnalysis() {
+        const handleFrame = (now, metadata) => {
+            if (this.timings.length > 0) {
+                const delta = metadata.mediaTime - this.timings[this.timings.length-1];
+                if (delta > 0) this.timings.push(metadata.mediaTime);
+            } else {
+                this.timings.push(metadata.mediaTime);
             }
-        }
-
-        function createVideoElement(file) {
-            return new Promise((resolve, reject) => {
-                const video = document.createElement('video');
-                video.preload = 'auto';
-                video.muted = true;
-                video.playsInline = true;
-                video.src = URL.createObjectURL(file);
-
-                video.onloadedmetadata = () => {
-                    if (video.duration < 0.5) {
-                        reject(new Error('Video too short (needs at least 0.5 seconds)'));
-                    }
-                    resolve(video);
-                };
-
-                video.onerror = () => {
-                    reject(new Error('Error loading video file'));
-                };
-            });
-        }
-
-        function analyzeVideoFPS(video) {
-            return new Promise((resolve) => {
-                const frameTimes = [];
-                let lastFrameTime = null;
-                let frameCount = 0;
-                const startTime = performance.now();
-
-                const updateProgress = () => {
-                    const progress = Math.min((performance.now() - startTime) / 2000, 1);
-                    document.querySelector('.progress-fill').style.width = `${progress * 100}%`;
-                };
-
-                const checkCompletion = () => {
-                    const minFrames = 240; // Analyze minimum 240 frames
-                    const maxDuration = 5; // Max 5 seconds analysis
-                    
-                    if ((frameCount >= minFrames && performance.now() - startTime > 1000) ||
-                        performance.now() - startTime > maxDuration * 1000) {
-                        video.pause();
-                        URL.revokeObjectURL(video.src);
-                        resolve(calculateFinalFPS(frameTimes));
-                        return true;
-                    }
-                    return false;
-                };
-
-                const processFrame = (now, metadata) => {
-                    if (!lastFrameTime) {
-                        lastFrameTime = metadata.mediaTime;
-                        video.requestVideoFrameCallback(processFrame);
-                        return;
-                    }
-
-                    frameCount++;
-                    const delta = metadata.mediaTime - lastFrameTime;
-                    if (delta > 0) frameTimes.push(delta);
-                    lastFrameTime = metadata.mediaTime;
-
-                    updateProgress();
-                    if (!checkCompletion()) {
-                        video.requestVideoFrameCallback(processFrame);
-                    }
-                };
-
-                video.play();
-                video.requestVideoFrameCallback(processFrame);
-            });
-        }
-
-        function calculateFinalFPS(frameTimes) {
-            // Calculate median frame interval
-            const sorted = [...frameTimes].sort((a, b) => a - b);
-            const median = sorted[Math.floor(sorted.length / 2)];
             
-            // Calculate mode of frame intervals with 0.1ms precision
-            const intervalCounts = new Map();
-            frameTimes.forEach(t => {
-                const key = Math.round(t * 10000); // 0.1ms precision
-                intervalCounts.set(key, (intervalCounts.get(key) || 0) + 1);
-            });
+            if (this.shouldContinue()) {
+                this.video.requestVideoFrameCallback(handleFrame);
+            } else {
+                this.analysisMethods.timingAnalysis = this.calculateTimingFPS();
+                this.checkCompletion();
+            }
+        };
+        this.video.requestVideoFrameCallback(handleFrame);
+    }
 
-            let maxCount = 0;
-            let mode = median;
-            intervalCounts.forEach((count, key) => {
-                if (count > maxCount) {
-                    maxCount = count;
-                    mode = key / 10000;
-                }
-            });
+    // Method 2: Pixel-change analysis
+    async runPixelAnalysis() {
+        const canvas = new OffscreenCanvas(160, 90);
+        const ctx = canvas.getContext('2d');
+        let lastHash = null;
+        let changes = 0;
+        
+        const trackFrame = async () => {
+            if (!this.shouldContinue()) return;
+            
+            ctx.drawImage(this.video, 0, 0, canvas.width, canvas.height);
+            const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const currentHash = this.getFrameHash(frame.data);
+            
+            if (lastHash && !this.hashMatch(lastHash, currentHash)) {
+                changes++;
+            }
+            lastHash = currentHash;
+            
+            await new Promise(requestAnimationFrame);
+            trackFrame();
+        };
+        
+        await trackFrame();
+        this.analysisMethods.pixelAnalysis = changes / (this.video.currentTime || 1);
+    }
 
-            // Use weighted average of median and mode
-            const finalInterval = (median * 0.3) + (mode * 0.7);
-            const rawFPS = 1 / finalInterval;
+    // Method 3: Duration-based calculation
+    runDurationAnalysis() {
+        const checkDuration = () => {
+            if (this.video.readyState < 2 || !this.video.duration) {
+                setTimeout(checkDuration, 100);
+                return;
+            }
+            
+            this.video.pause();
+            this.video.currentTime = 0;
+            let frameCount = 0;
+            
+            const trackFrames = () => {
+                this.video.requestVideoFrameCallback((now, metadata) => {
+                    frameCount++;
+                    if (metadata.mediaTime < this.video.duration) {
+                        trackFrames();
+                    } else {
+                        this.analysisMethods.durationAnalysis = frameCount / this.video.duration;
+                        this.checkCompletion();
+                    }
+                });
+            };
+            
+            this.video.play();
+            trackFrames();
+        };
+        checkDuration();
+    }
 
-            // Match to nearest standard FPS with 0.5% tolerance
-            return STANDARD_FPS.reduce((closest, fps) => {
-                const diff = Math.abs(rawFPS - fps);
-                return diff < Math.abs(rawFPS - closest) ? fps : closest;
-            }, rawFPS);
+    // Analysis core
+    calculateTimingFPS() {
+        const intervals = [];
+        for (let i = 1; i < this.timings.length; i++) {
+            intervals.push(this.timings[i] - this.timings[i-1]);
         }
+        return 1 / (this.median(intervals) || 0.0166667);
+    }
 
-        function displayResults(fps, fileName) {
-            document.querySelector('.results').style.display = 'block';
-            document.querySelector('.progress-fill').style.width = '100%';
-            document.getElementById('resultText').innerHTML = `
-                <strong>Detected Frame Rate:</strong> ${fps} FPS
-                <p>File: ${fileName}</p>
-            `;
+    getFrameHash(data) {
+        let hash = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            hash = (hash << 5) - hash + data[i] + data[i+1] + data[i+2];
         }
+        return hash;
+    }
 
-        function resetUI() {
-            document.querySelector('.results').style.display = 'none';
-            document.querySelector('.progress-fill').style.width = '0';
-            document.getElementById('error').style.display = 'none';
-        }
+    hashMatch(a, b) {
+        return Math.abs(a - b) < 1000000; // Adjust based on testing
+    }
 
-        function showError(message) {
-            document.getElementById('error').style.display = 'block';
-            document.getElementById('error').textContent = message;
+    median(values) {
+        values.sort((a, b) => a - b);
+        const half = Math.floor(values.length / 2);
+        return values.length % 2 
+            ? values[half] 
+            : (values[half - 1] + values[half]) / 2;
+    }
+
+    shouldContinue() {
+        return Date.now() - this.startTime < 5000 && 
+               this.video.currentTime < this.video.duration - 0.5;
+    }
+
+    checkCompletion() {
+        if (Object.values(this.analysisMethods).every(v => v !== null)) {
+            this.video.pause();
+            URL.revokeObjectURL(this.video.src);
+            this.callback(this.resolveFinalFPS());
         }
-    </script>
+    }
+
+    resolveFinalFPS() {
+        const results = Object.values(this.analysisMethods);
+        const [timing, pixel, duration] = results;
+        
+        // Cross-validate all three methods
+        const candidates = results.map(fps => 
+            Object.keys(FRAME_RATE_STANDARDS).reduce((a, b) => 
+                Math.abs(fps - a) < Math.abs(fps - b) ? a : b
+            )
+        );
+        
+        // If all agree on standard
+        if (new Set(candidates).size === 1) {
+            return candidates[0];
+        }
+        
+        // If two methods agree
+        const counts = candidates.reduce((a,c) => (a[c] = (a[c]||0)+1, a), {});
+        const majority = Object.entries(counts).find(([k,v]) => v >= 2);
+        if (majority) return majority[0];
+        
+        // Fallback to median of precise measurements
+        const preciseValues = [timing, duration].sort();
+        return Math.round(preciseValues[1] * 1000)/1000;
+    }
+}
+
+// UI Handling
+async function handleFile(file) {
+    try {
+        resetUI();
+        const result = await ForensicFrameAnalyzer.analyze(file);
+        showResults(result, file.name);
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+function showResults(fps, filename) {
+    const results = document.getElementById('results');
+    results.style.display = 'block';
+    const standard = FRAME_RATE_STANDARDS[fps] ? 
+        ` (${FRAME_RATE_STANDARDS[fps].join(', ')})` : '';
+    results.innerHTML = `✅ Final Verdict\nFile: ${filename}\nTrue Frame Rate: ${fps}${standard}`;
+}
+
+function resetUI() {
+    document.getElementById('results').style.display = 'none';
+    document.querySelector('.progress-fill').style.width = '0';
+    document.getElementById('error').style.display = 'none';
+}
+
+function showError(msg) {
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = msg;
+}
+
+// Event handlers
+function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+function handleDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); }
+function handleFileSelect(e) { handleFile(e.target.files[0]); }
+document.querySelector('.drop-zone').addEventListener('click', () => document.getElementById('fileInput').click());
+</script>
 </body>
 </html>
